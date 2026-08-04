@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ProgressRouteImport } from './routes/progress'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProgressRoute = ProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/courses': typeof CoursesRoute
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
+  '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/courses': typeof CoursesRoute
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
+  '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,23 @@ export interface FileRoutesById {
   '/courses': typeof CoursesRoute
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
+  '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/courses' | '/practice' | '/pricing' | '/progress'
+  fullPaths:
+    '/' | '/courses' | '/practice' | '/pricing' | '/profile' | '/progress'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/courses' | '/practice' | '/pricing' | '/progress'
-  id: '__root__' | '/' | '/courses' | '/practice' | '/pricing' | '/progress'
+  to: '/' | '/courses' | '/practice' | '/pricing' | '/profile' | '/progress'
+  id:
+    | '__root__'
+    | '/'
+    | '/courses'
+    | '/practice'
+    | '/pricing'
+    | '/profile'
+    | '/progress'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +93,7 @@ export interface RootRouteChildren {
   CoursesRoute: typeof CoursesRoute
   PracticeRoute: typeof PracticeRoute
   PricingRoute: typeof PricingRoute
+  ProfileRoute: typeof ProfileRoute
   ProgressRoute: typeof ProgressRoute
 }
 
@@ -109,6 +127,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/progress': {
       id: '/progress'
       path: '/progress'
@@ -124,8 +149,19 @@ const rootRouteChildren: RootRouteChildren = {
   CoursesRoute: CoursesRoute,
   PracticeRoute: PracticeRoute,
   PricingRoute: PricingRoute,
+  ProfileRoute: ProfileRoute,
   ProgressRoute: ProgressRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
