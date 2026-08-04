@@ -1,24 +1,64 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Hero } from "@/components/magyar/hero";
+import { Features } from "@/components/magyar/features";
+import { DashboardDemo } from "@/components/magyar/dashboard-demo";
+import { ContinueLearning } from "@/components/magyar/continue-learning";
+import { Analytics } from "@/components/magyar/analytics";
+import { DailyGoal } from "@/components/magyar/daily-goal";
+import { Achievements } from "@/components/magyar/achievements";
+import { PricingSection } from "@/components/magyar/pricing-section";
+import { Section } from "@/components/magyar/section";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "MagyarFlow — заговори на венгерском уверенно" },
+      {
+        name: "description",
+        content:
+          "Интерактивный онлайн-курс венгерского языка: короткие уроки, практика произношения и наглядный прогресс.",
+      },
+      { property: "og:title", content: "MagyarFlow — заговори на венгерском уверенно" },
+      {
+        property: "og:description",
+        content: "Интерактивный курс венгерского языка с уроками, практикой и аналитикой прогресса.",
+      },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <>
+      <Hero />
+      <Features />
+      <DashboardDemo />
+      <ContinueLearning />
+      <Section
+        eyebrow="Аналитика"
+        title="Прогресс, который видно в цифрах"
+        description="Активность, точность, словарный запас и время обучения — всё в одном разделе."
+      >
+        <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
+          <Analytics />
+          <DailyGoal />
+        </div>
+      </Section>
+      <Section
+        eyebrow="Достижения"
+        title="Награды за настойчивость"
+        description="Открывайте новые награды по мере обучения — от первого урока до месяца практики."
+      >
+        <Achievements />
+      </Section>
+      <Section
+        eyebrow="Тарифы"
+        title="Начните бесплатно"
+        description="Оплата пока не подключена — это демонстрационная версия платформы."
+      >
+        <PricingSection />
+      </Section>
+    </>
   );
 }
