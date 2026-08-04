@@ -81,20 +81,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MagyarFlow — онлайн-курс венгерского языка" },
+      { title: "MagyarFlow — заговори на венгерском уверенно" },
       {
         name: "description",
-        content: "Венгерский язык понятным и современным способом: уроки, практика и прогресс.",
+        content: "Интерактивный онлайн-курс венгерского языка: короткие уроки, практика произношения и наглядный прогресс.",
       },
       { name: "author", content: "MagyarFlow" },
-      { property: "og:title", content: "MagyarFlow — онлайн-курс венгерского языка" },
+      { property: "og:title", content: "MagyarFlow — заговори на венгерском уверенно" },
       {
         property: "og:description",
-        content: "Интерактивная платформа для изучения венгерского языка.",
+        content: "Интерактивный онлайн-курс венгерского языка: короткие уроки, практика произношения и наглядный прогресс.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "MagyarFlow — заговори на венгерском уверенно" },
+      { name: "twitter:description", content: "Интерактивный онлайн-курс венгерского языка: короткие уроки, практика произношения и наглядный прогресс." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a2680a11-9a3d-4f7b-bc5d-a8cc8dfd4874/id-preview-81c65741--d0f13c24-1a2c-442f-afe0-d10ead806ded.lovable.app-1785845072690.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a2680a11-9a3d-4f7b-bc5d-a8cc8dfd4874/id-preview-81c65741--d0f13c24-1a2c-442f-afe0-d10ead806ded.lovable.app-1785845072690.png" },
     ],
     links: [
       {
