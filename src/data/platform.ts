@@ -231,7 +231,10 @@ export const plans = [
   },
 ];
 
-export const activityCalendar = Array.from({ length: 91 }, (_, i) => ({
-  day: i,
-  level: [0, 1, 2, 3, 4][Math.floor((Math.sin(i * 1.7) + 1) * 2.4) % 5],
-}));
+export const activityCalendar: { day: number; level: number }[] = Array.from(
+  { length: 91 },
+  (_, i) => ({
+    day: i,
+    level: Math.floor((Math.sin(i * 1.7) + 1) * 2.4) % 5,
+  }),
+);
