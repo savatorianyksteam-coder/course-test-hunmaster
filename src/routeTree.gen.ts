@@ -14,8 +14,6 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as DictionaryRouteImport } from './routes/dictionary'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as PracticeRouteImport } from './routes/practice'
-import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as RegisterRouteImport } from './routes/register'
@@ -46,16 +44,6 @@ const DictionaryRoute = DictionaryRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PracticeRoute = PracticeRouteImport.update({
-  id: '/practice',
-  path: '/practice',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -95,8 +83,6 @@ export interface FileRoutesByFullPath {
   '/courses': typeof CoursesRouteWithChildren
   '/dictionary': typeof DictionaryRoute
   '/login': typeof LoginRoute
-  '/practice': typeof PracticeRoute
-  '/pricing': typeof PricingRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/register': typeof RegisterRoute
@@ -109,8 +95,6 @@ export interface FileRoutesByTo {
   '/achievements': typeof AchievementsRoute
   '/dictionary': typeof DictionaryRoute
   '/login': typeof LoginRoute
-  '/practice': typeof PracticeRoute
-  '/pricing': typeof PricingRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/register': typeof RegisterRoute
@@ -125,8 +109,6 @@ export interface FileRoutesById {
   '/courses': typeof CoursesRouteWithChildren
   '/dictionary': typeof DictionaryRoute
   '/login': typeof LoginRoute
-  '/practice': typeof PracticeRoute
-  '/pricing': typeof PricingRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/register': typeof RegisterRoute
@@ -142,8 +124,6 @@ export interface FileRouteTypes {
     | '/courses'
     | '/dictionary'
     | '/login'
-    | '/practice'
-    | '/pricing'
     | '/profile'
     | '/progress'
     | '/register'
@@ -156,8 +136,6 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/dictionary'
     | '/login'
-    | '/practice'
-    | '/pricing'
     | '/profile'
     | '/progress'
     | '/register'
@@ -171,8 +149,6 @@ export interface FileRouteTypes {
     | '/courses'
     | '/dictionary'
     | '/login'
-    | '/practice'
-    | '/pricing'
     | '/profile'
     | '/progress'
     | '/register'
@@ -187,8 +163,6 @@ export interface RootRouteChildren {
   CoursesRoute: typeof CoursesRouteWithChildren
   DictionaryRoute: typeof DictionaryRoute
   LoginRoute: typeof LoginRoute
-  PracticeRoute: typeof PracticeRoute
-  PricingRoute: typeof PricingRoute
   ProfileRoute: typeof ProfileRoute
   ProgressRoute: typeof ProgressRoute
   RegisterRoute: typeof RegisterRoute
@@ -230,20 +204,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/practice': {
-      id: '/practice'
-      path: '/practice'
-      fullPath: '/practice'
-      preLoaderRoute: typeof PracticeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -310,8 +270,6 @@ const rootRouteChildren: RootRouteChildren = {
   CoursesRoute: CoursesRouteWithChildren,
   DictionaryRoute: DictionaryRoute,
   LoginRoute: LoginRoute,
-  PracticeRoute: PracticeRoute,
-  PricingRoute: PricingRoute,
   ProfileRoute: ProfileRoute,
   ProgressRoute: ProgressRoute,
   RegisterRoute: RegisterRoute,
