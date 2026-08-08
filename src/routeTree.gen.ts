@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as CoursesRouteImport } from './routes/courses'
+import { Route as DictionaryRouteImport } from './routes/dictionary'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -24,9 +26,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoursesRoute = CoursesRouteImport.update({
   id: '/courses',
   path: '/courses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DictionaryRoute = DictionaryRouteImport.update({
+  id: '/dictionary',
+  path: '/dictionary',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PracticeRoute = PracticeRouteImport.update({
@@ -67,7 +79,9 @@ const LessonLessonIdRoute = LessonLessonIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/courses': typeof CoursesRouteWithChildren
+  '/dictionary': typeof DictionaryRoute
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/profile': typeof ProfileRoute
@@ -78,6 +92,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
+  '/dictionary': typeof DictionaryRoute
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/profile': typeof ProfileRoute
@@ -89,7 +105,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/courses': typeof CoursesRouteWithChildren
+  '/dictionary': typeof DictionaryRoute
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/profile': typeof ProfileRoute
@@ -102,7 +120,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/achievements'
     | '/courses'
+    | '/dictionary'
     | '/practice'
     | '/pricing'
     | '/profile'
@@ -113,6 +133,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/achievements'
+    | '/dictionary'
     | '/practice'
     | '/pricing'
     | '/profile'
@@ -123,7 +145,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/achievements'
     | '/courses'
+    | '/dictionary'
     | '/practice'
     | '/pricing'
     | '/profile'
@@ -135,7 +159,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AchievementsRoute: typeof AchievementsRoute
   CoursesRoute: typeof CoursesRouteWithChildren
+  DictionaryRoute: typeof DictionaryRoute
   PracticeRoute: typeof PracticeRoute
   PricingRoute: typeof PricingRoute
   ProfileRoute: typeof ProfileRoute
@@ -152,11 +178,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/courses': {
       id: '/courses'
       path: '/courses'
       fullPath: '/courses'
       preLoaderRoute: typeof CoursesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dictionary': {
+      id: '/dictionary'
+      path: '/dictionary'
+      fullPath: '/dictionary'
+      preLoaderRoute: typeof DictionaryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/practice': {
@@ -226,7 +266,9 @@ const CoursesRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AchievementsRoute: AchievementsRoute,
   CoursesRoute: CoursesRouteWithChildren,
+  DictionaryRoute: DictionaryRoute,
   PracticeRoute: PracticeRoute,
   PricingRoute: PricingRoute,
   ProfileRoute: ProfileRoute,
