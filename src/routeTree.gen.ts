@@ -13,10 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as DictionaryRouteImport } from './routes/dictionary'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ProgressRouteImport } from './routes/progress'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as LessonLessonIdRouteImport } from './routes/lesson.$lessonId'
@@ -41,6 +43,11 @@ const DictionaryRoute = DictionaryRouteImport.update({
   path: '/dictionary',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PracticeRoute = PracticeRouteImport.update({
   id: '/practice',
   path: '/practice',
@@ -59,6 +66,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const ProgressRoute = ProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoursesIndexRoute = CoursesIndexRouteImport.update({
@@ -82,10 +94,12 @@ export interface FileRoutesByFullPath {
   '/achievements': typeof AchievementsRoute
   '/courses': typeof CoursesRouteWithChildren
   '/dictionary': typeof DictionaryRoute
+  '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
+  '/register': typeof RegisterRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/courses/': typeof CoursesIndexRoute
@@ -94,10 +108,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/dictionary': typeof DictionaryRoute
+  '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
+  '/register': typeof RegisterRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/courses': typeof CoursesIndexRoute
@@ -108,10 +124,12 @@ export interface FileRoutesById {
   '/achievements': typeof AchievementsRoute
   '/courses': typeof CoursesRouteWithChildren
   '/dictionary': typeof DictionaryRoute
+  '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
+  '/register': typeof RegisterRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/courses/': typeof CoursesIndexRoute
@@ -123,10 +141,12 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/courses'
     | '/dictionary'
+    | '/login'
     | '/practice'
     | '/pricing'
     | '/profile'
     | '/progress'
+    | '/register'
     | '/courses/$courseId'
     | '/lesson/$lessonId'
     | '/courses/'
@@ -135,10 +155,12 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/dictionary'
+    | '/login'
     | '/practice'
     | '/pricing'
     | '/profile'
     | '/progress'
+    | '/register'
     | '/courses/$courseId'
     | '/lesson/$lessonId'
     | '/courses'
@@ -148,10 +170,12 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/courses'
     | '/dictionary'
+    | '/login'
     | '/practice'
     | '/pricing'
     | '/profile'
     | '/progress'
+    | '/register'
     | '/courses/$courseId'
     | '/lesson/$lessonId'
     | '/courses/'
@@ -162,10 +186,12 @@ export interface RootRouteChildren {
   AchievementsRoute: typeof AchievementsRoute
   CoursesRoute: typeof CoursesRouteWithChildren
   DictionaryRoute: typeof DictionaryRoute
+  LoginRoute: typeof LoginRoute
   PracticeRoute: typeof PracticeRoute
   PricingRoute: typeof PricingRoute
   ProfileRoute: typeof ProfileRoute
   ProgressRoute: typeof ProgressRoute
+  RegisterRoute: typeof RegisterRoute
   LessonLessonIdRoute: typeof LessonLessonIdRoute
 }
 
@@ -199,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DictionaryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/practice': {
       id: '/practice'
       path: '/practice'
@@ -225,6 +258,13 @@ declare module '@tanstack/react-router' {
       path: '/progress'
       fullPath: '/progress'
       preLoaderRoute: typeof ProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/courses/': {
@@ -269,10 +309,12 @@ const rootRouteChildren: RootRouteChildren = {
   AchievementsRoute: AchievementsRoute,
   CoursesRoute: CoursesRouteWithChildren,
   DictionaryRoute: DictionaryRoute,
+  LoginRoute: LoginRoute,
   PracticeRoute: PracticeRoute,
   PricingRoute: PricingRoute,
   ProfileRoute: ProfileRoute,
   ProgressRoute: ProgressRoute,
+  RegisterRoute: RegisterRoute,
   LessonLessonIdRoute: LessonLessonIdRoute,
 }
 export const routeTree = rootRouteImport
