@@ -11,7 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { ThemeProvider } from "@/components/magyar/theme-provider";
+import { ThemeProvider } from "@/components/hunmaster/theme-provider";
 import { AppHeader } from "@/components/hunmaster/app-header";
 import { AppFooter } from "@/components/hunmaster/app-footer";
 import { MockAuthProvider } from "@/lib/mock-auth";

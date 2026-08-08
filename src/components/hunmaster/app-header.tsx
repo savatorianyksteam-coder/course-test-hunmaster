@@ -3,7 +3,7 @@ import { Bell, LogOut, Menu, Moon, Settings, Sun, User, X } from "lucide-react";
 import { useState } from "react";
 import { navItems, notifications } from "@/data/hunmaster";
 import { useAuth } from "@/lib/mock-auth";
-import { useTheme } from "@/components/magyar/theme-provider";
+import { useTheme } from "@/components/hunmaster/theme-provider";
 import { BrandMark } from "./brand-mark";
 import { Button } from "@/components/ui/button";
 import {
