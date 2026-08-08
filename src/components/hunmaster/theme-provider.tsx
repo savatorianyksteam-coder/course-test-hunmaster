@@ -18,13 +18,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("magyarflow-theme") as Theme | null;
+    const stored = window.localStorage.getItem("hunmaster-theme") as Theme | null;
     if (stored === "light" || stored === "dark") setTheme(stored);
   }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
-    window.localStorage.setItem("magyarflow-theme", theme);
+    window.localStorage.setItem("hunmaster-theme", theme);
   }, [theme]);
 
   const toggle = useCallback(() => setTheme((t) => (t === "dark" ? "light" : "dark")), []);

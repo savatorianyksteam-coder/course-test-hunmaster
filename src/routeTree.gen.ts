@@ -10,15 +10,25 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as CoursesRouteImport } from './routes/courses'
-import { Route as PracticeRouteImport } from './routes/practice'
-import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as DictionaryRouteImport } from './routes/dictionary'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ProgressRouteImport } from './routes/progress'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as CoursesIndexRouteImport } from './routes/courses.index'
+import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
+import { Route as LessonLessonIdRouteImport } from './routes/lesson.$lessonId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoursesRoute = CoursesRouteImport.update({
@@ -26,14 +36,14 @@ const CoursesRoute = CoursesRouteImport.update({
   path: '/courses',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PracticeRoute = PracticeRouteImport.update({
-  id: '/practice',
-  path: '/practice',
+const DictionaryRoute = DictionaryRouteImport.update({
+  id: '/dictionary',
+  path: '/dictionary',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -46,55 +56,117 @@ const ProgressRoute = ProgressRouteImport.update({
   path: '/progress',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesIndexRoute = CoursesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CoursesRoute,
+} as any)
+const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
+  id: '/$courseId',
+  path: '/$courseId',
+  getParentRoute: () => CoursesRoute,
+} as any)
+const LessonLessonIdRoute = LessonLessonIdRouteImport.update({
+  id: '/lesson/$lessonId',
+  path: '/lesson/$lessonId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/courses': typeof CoursesRoute
-  '/practice': typeof PracticeRoute
-  '/pricing': typeof PricingRoute
+  '/achievements': typeof AchievementsRoute
+  '/courses': typeof CoursesRouteWithChildren
+  '/dictionary': typeof DictionaryRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
+  '/register': typeof RegisterRoute
+  '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/lesson/$lessonId': typeof LessonLessonIdRoute
+  '/courses/': typeof CoursesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/courses': typeof CoursesRoute
-  '/practice': typeof PracticeRoute
-  '/pricing': typeof PricingRoute
+  '/achievements': typeof AchievementsRoute
+  '/dictionary': typeof DictionaryRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
+  '/register': typeof RegisterRoute
+  '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/lesson/$lessonId': typeof LessonLessonIdRoute
+  '/courses': typeof CoursesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/courses': typeof CoursesRoute
-  '/practice': typeof PracticeRoute
-  '/pricing': typeof PricingRoute
+  '/achievements': typeof AchievementsRoute
+  '/courses': typeof CoursesRouteWithChildren
+  '/dictionary': typeof DictionaryRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
+  '/register': typeof RegisterRoute
+  '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/lesson/$lessonId': typeof LessonLessonIdRoute
+  '/courses/': typeof CoursesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/courses' | '/practice' | '/pricing' | '/profile' | '/progress'
+    | '/'
+    | '/achievements'
+    | '/courses'
+    | '/dictionary'
+    | '/login'
+    | '/profile'
+    | '/progress'
+    | '/register'
+    | '/courses/$courseId'
+    | '/lesson/$lessonId'
+    | '/courses/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/courses' | '/practice' | '/pricing' | '/profile' | '/progress'
+  to:
+    | '/'
+    | '/achievements'
+    | '/dictionary'
+    | '/login'
+    | '/profile'
+    | '/progress'
+    | '/register'
+    | '/courses/$courseId'
+    | '/lesson/$lessonId'
+    | '/courses'
   id:
     | '__root__'
     | '/'
+    | '/achievements'
     | '/courses'
-    | '/practice'
-    | '/pricing'
+    | '/dictionary'
+    | '/login'
     | '/profile'
     | '/progress'
+    | '/register'
+    | '/courses/$courseId'
+    | '/lesson/$lessonId'
+    | '/courses/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CoursesRoute: typeof CoursesRoute
-  PracticeRoute: typeof PracticeRoute
-  PricingRoute: typeof PricingRoute
+  AchievementsRoute: typeof AchievementsRoute
+  CoursesRoute: typeof CoursesRouteWithChildren
+  DictionaryRoute: typeof DictionaryRoute
+  LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
   ProgressRoute: typeof ProgressRoute
+  RegisterRoute: typeof RegisterRoute
+  LessonLessonIdRoute: typeof LessonLessonIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -106,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/courses': {
       id: '/courses'
       path: '/courses'
@@ -113,18 +192,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoursesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/practice': {
-      id: '/practice'
-      path: '/practice'
-      fullPath: '/practice'
-      preLoaderRoute: typeof PracticeRouteImport
+    '/dictionary': {
+      id: '/dictionary'
+      path: '/dictionary'
+      fullPath: '/dictionary'
+      preLoaderRoute: typeof DictionaryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -141,17 +220,71 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses/': {
+      id: '/courses/'
+      path: '/'
+      fullPath: '/courses/'
+      preLoaderRoute: typeof CoursesIndexRouteImport
+      parentRoute: typeof CoursesRoute
+    }
+    '/courses/$courseId': {
+      id: '/courses/$courseId'
+      path: '/$courseId'
+      fullPath: '/courses/$courseId'
+      preLoaderRoute: typeof CoursesCourseIdRouteImport
+      parentRoute: typeof CoursesRoute
+    }
+    '/lesson/$lessonId': {
+      id: '/lesson/$lessonId'
+      path: '/lesson/$lessonId'
+      fullPath: '/lesson/$lessonId'
+      preLoaderRoute: typeof LessonLessonIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface CoursesRouteChildren {
+  CoursesCourseIdRoute: typeof CoursesCourseIdRoute
+  CoursesIndexRoute: typeof CoursesIndexRoute
+}
+
+const CoursesRouteChildren: CoursesRouteChildren = {
+  CoursesCourseIdRoute: CoursesCourseIdRoute,
+  CoursesIndexRoute: CoursesIndexRoute,
+}
+
+const CoursesRouteWithChildren =
+  CoursesRoute._addFileChildren(CoursesRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CoursesRoute: CoursesRoute,
-  PracticeRoute: PracticeRoute,
-  PricingRoute: PricingRoute,
+  AchievementsRoute: AchievementsRoute,
+  CoursesRoute: CoursesRouteWithChildren,
+  DictionaryRoute: DictionaryRoute,
+  LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
   ProgressRoute: ProgressRoute,
+  RegisterRoute: RegisterRoute,
+  LessonLessonIdRoute: LessonLessonIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

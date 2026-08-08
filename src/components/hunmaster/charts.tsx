@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { accuracyData, weeklyActivity, weeklyWords } from "@/data/platform";
+import { accuracyData, weeklyActivity, weeklyWords } from "@/data/hunmaster";
 
 const tooltipStyle = {
   background: "var(--popover)",
