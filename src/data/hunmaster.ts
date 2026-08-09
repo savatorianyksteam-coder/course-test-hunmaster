@@ -15,7 +15,7 @@ export type AccessStatus = "active" | "pending" | "expired" | "blocked";
 export type UserRole = "user" | "admin";
 
 export const navItems = [
-  { label: "Главная", to: "/dashboard" },
+  { label: "Главная", to: "/" },
   { label: "Мои курсы", to: "/courses" },
   { label: "Словарь", to: "/dictionary" },
   { label: "Прогресс", to: "/progress" },
@@ -145,10 +145,10 @@ export const notifications: { title: string; text: string; time: string }[] = []
 
 /** Static catalogue metadata (content, not user data). */
 export const courses = [
-  { id: "a1", code: "A1", title: "Венгерский A1", description: "База: алфавит, приветствия, числа, первые диалоги.", lessons: a1LessonIds.length, modules: a1Modules.length, hours: 24, state: "available" as "available" | "soon" | "locked" },
-  { id: "a2", code: "A2", title: "Венгерский A2", description: "Расширение лексики и грамматики повседневного общения.", lessons: 0, modules: 0, hours: 0, state: "soon" as "available" | "soon" | "locked" },
-  { id: "b1", code: "B1", title: "Венгерский B1", description: "Свободные диалоги, работа и учёба.", lessons: 0, modules: 0, hours: 0, state: "soon" as "available" | "soon" | "locked" },
-  { id: "speaking", code: "SP", title: "Разговорный клуб", description: "Практика речи с преподавателем.", lessons: 0, modules: 0, hours: 0, state: "soon" as "available" | "soon" | "locked" },
+  { id: "a1", code: "A1", title: "Венгерский A1", description: "База: алфавит, приветствия, числа, первые диалоги.", lessons: a1LessonIds.length, modules: a1Modules.length, hours: 24, progress: 0, state: "available" as "available" | "soon" | "locked" },
+  { id: "a2", code: "A2", title: "Венгерский A2", description: "Расширение лексики и грамматики повседневного общения.", lessons: 0, modules: 0, hours: 0, progress: 0, state: "soon" as "available" | "soon" | "locked" },
+  { id: "b1", code: "B1", title: "Венгерский B1", description: "Свободные диалоги, работа и учёба.", lessons: 0, modules: 0, hours: 0, progress: 0, state: "soon" as "available" | "soon" | "locked" },
+  { id: "speaking", code: "SP", title: "Разговорный клуб", description: "Практика речи с преподавателем.", lessons: 0, modules: 0, hours: 0, progress: 0, state: "soon" as "available" | "soon" | "locked" },
 ];
 
 /** Zeroed placeholders: replaced by real values from getLearningStats. */
@@ -191,12 +191,16 @@ export const activityCalendar = Array.from({ length: 91 }, (_, i) => ({ date: `d
 export const achievements = achievementDefs.map((a) => ({ ...a, unlocked: false, progress: 0 }));
 
 export type LessonStep =
-  | { type: "theory"; title: string; text: string }
-  | { type: "choice"; question: string; options: string[]; answer: number }
-  | { type: "input"; question: string; answer: string };
+  | { kind: "theory"; title: string; text: string }
+  | { kind: "word"; title: string; text: string }
+  | { kind: "choice"; question: string; options: string[]; correct: number }
+  | { kind: "listen"; question: string; options: string[]; correct: number }
+  | { kind: "input"; question: string; answers: string[] }
+  | { kind: "build"; question: string; tokens: string[]; correct: string[] };
 
+/** Placeholder step list; protected content is fetched from the server. */
 export const lessonSteps: LessonStep[] = [
-  { type: "theory", title: "Приветствие", text: "Szia — неформальное «привет». Jó napot — вежливое «добрый день»." },
-  { type: "choice", question: "Как сказать «Спасибо»?", options: ["Kérem", "Köszönöm", "Viszlát"], answer: 1 },
-  { type: "input", question: "Переведите: «Да»", answer: "igen" },
+  { kind: "theory", title: "Приветствие", text: "Szia — неформальное «привет». Jó napot — вежливое «добрый день»." },
+  { kind: "choice", question: "Как сказать «Спасибо»?", options: ["Kérem", "Köszönöm", "Viszlát"], correct: 1 },
+  { kind: "input", question: "Переведите: «Да»", answers: ["igen"] },
 ];
