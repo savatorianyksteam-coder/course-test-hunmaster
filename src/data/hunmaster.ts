@@ -180,27 +180,36 @@ export const accuracyData = [
   { name: "Ошибки", value: 100 },
 ];
 export const skillProgress = [
-  { skill: "Лексика", value: 0 },
-  { skill: "Грамматика", value: 0 },
-  { skill: "Аудирование", value: 0 },
-  { skill: "Речь", value: 0 },
+  { section: "Лексика", skill: "Лексика", value: 0 },
+  { section: "Грамматика", skill: "Грамматика", value: 0 },
+  { section: "Аудирование", skill: "Аудирование", value: 0 },
+  { section: "Речь", skill: "Речь", value: 0 },
 ];
-export const activityCalendar = Array.from({ length: 91 }, (_, i) => ({ date: `d${i}`, level: 0 }));
+export const activityCalendar = Array.from({ length: 91 }, (_, i) => ({ date: `d${i}`, day: i, level: 0 }));
 
 /** Achievement list with locked state until real progress unlocks them. */
 export const achievements = achievementDefs.map((a) => ({ ...a, unlocked: false, progress: 0 }));
 
 export type LessonStep =
-  | { kind: "theory"; title: string; text: string }
-  | { kind: "word"; title: string; text: string }
-  | { kind: "choice"; question: string; options: string[]; correct: number }
-  | { kind: "listen"; question: string; options: string[]; correct: number }
-  | { kind: "input"; question: string; answers: string[] }
-  | { kind: "build"; question: string; tokens: string[]; correct: string[] };
+  | { kind: "theory"; title: string; body: string; examples: { hu: string; ru: string }[] }
+  | { kind: "word"; hu: string; ru: string; transcription: string; hint?: string }
+  | { kind: "choice"; prompt: string; options: string[]; correct: number }
+  | { kind: "listen"; prompt: string; options: string[]; correct: number }
+  | { kind: "input"; prompt: string; hu: string; answers: string[] }
+  | { kind: "build"; prompt: string; ru: string; tokens: string[]; correct: string[] };
 
 /** Placeholder step list; protected content is fetched from the server. */
 export const lessonSteps: LessonStep[] = [
-  { kind: "theory", title: "Приветствие", text: "Szia — неформальное «привет». Jó napot — вежливое «добрый день»." },
-  { kind: "choice", question: "Как сказать «Спасибо»?", options: ["Kérem", "Köszönöm", "Viszlát"], correct: 1 },
-  { kind: "input", question: "Переведите: «Да»", answers: ["igen"] },
+  {
+    kind: "theory",
+    title: "Приветствие",
+    body: "Szia — неформальное «привет». Jó napot — вежливое «добрый день».",
+    examples: [
+      { hu: "Szia!", ru: "Привет!" },
+      { hu: "Jó napot!", ru: "Добрый день!" },
+    ],
+  },
+  { kind: "word", hu: "Köszönöm", ru: "Спасибо", transcription: "[кёсёнём]", hint: "Вежливая форма" },
+  { kind: "choice", prompt: "Как сказать «Спасибо»?", options: ["Kérem", "Köszönöm", "Viszlát"], correct: 1 },
+  { kind: "input", prompt: "Переведите на венгерский", hu: "Да", answers: ["igen"] },
 ];
