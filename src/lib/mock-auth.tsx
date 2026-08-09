@@ -7,7 +7,23 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { demoUser, type AccessStatus, type DemoUser } from "@/data/hunmaster";
+import type { AccessStatus } from "@/data/hunmaster";
+
+export type DemoUser = {
+  name: string;
+  email: string;
+  telegram: string;
+  level: string;
+  accessUntil: string;
+};
+
+const demoUser: DemoUser = {
+  name: "",
+  email: "",
+  telegram: "",
+  level: "A1",
+  accessUntil: "—",
+};
 
 /**
  * DEMO auth/access layer.

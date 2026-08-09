@@ -1,9 +1,8 @@
 /**
- * MOCK / DEMO data layer for HunMaster Learn.
+ * STATIC CURRICULUM CONTENT for HunMaster Learn.
  *
- * Everything here is intentionally isolated from components so it can later be
- * swapped for Supabase queries (auth, courses, lessons, progress, access status)
- * without touching the UI.
+ * Only course/lesson/vocabulary content lives here. Every user-related value
+ * (profile, access status, progress, statistics) comes from the database.
  */
 
 export const brand = {
@@ -13,38 +12,7 @@ export const brand = {
 };
 
 export type AccessStatus = "active" | "pending" | "expired" | "blocked";
-
-export type DemoUser = {
-  id: string;
-  name: string;
-  email: string;
-  telegram: string;
-  level: string;
-  accessStatus: AccessStatus;
-  accessUntil: string;
-};
-
-export const demoUser: DemoUser = {
-  id: "demo-user",
-  name: "Александр",
-  email: "alexander@example.com",
-  telegram: "@alexander",
-  level: "A1",
-  accessStatus: "active",
-  accessUntil: "12 сентября 2026",
-};
-
-export const learningStats = {
-  courseProgress: 34,
-  wordsLearned: 246,
-  lessonsDone: 21,
-  lessonsTotal: 60,
-  streak: 7,
-  timeSpent: "12 ч 43 мин",
-  accuracy: 87,
-  modulesTotal: 12,
-  hoursTotal: 30,
-};
+export type UserRole = "user" | "admin";
 
 export const navItems = [
   { label: "Главная", to: "/" },
@@ -53,83 +21,6 @@ export const navItems = [
   { label: "Прогресс", to: "/progress" },
   { label: "Достижения", to: "/achievements" },
 ] as const;
-
-export const notifications = [
-  { title: "Урок 12 ждёт вас", text: "Знакомство и рассказ о себе — 45% пройдено", time: "5 мин" },
-  { title: "Серия 7 дней", text: "Не прерывайте серию — занимайтесь сегодня", time: "2 ч" },
-  { title: "Новый модуль открыт", text: "Модуль 03 «Повседневная жизнь»", time: "вчера" },
-];
-
-export const currentLesson = {
-  id: "a1-12",
-  courseId: "a1",
-  courseTitle: "Hungarian A1",
-  module: "Модуль 3",
-  number: 12,
-  title: "Знакомство и рассказ о себе",
-  progress: 45,
-  duration: "14 минут",
-  tasks: 10,
-};
-
-export type CourseCard = {
-  id: string;
-  code: string;
-  title: string;
-  description: string;
-  lessons: number;
-  modules: number;
-  hours: number;
-  progress: number;
-  state: "active" | "locked" | "soon";
-};
-
-export const courses: CourseCard[] = [
-  {
-    id: "a1",
-    code: "A1",
-    title: "Венгерский язык A1",
-    description: "Алфавит, произношение, первые фразы и уверенное знакомство.",
-    lessons: 60,
-    modules: 12,
-    hours: 30,
-    progress: 34,
-    state: "active",
-  },
-  {
-    id: "a2",
-    code: "A2",
-    title: "Венгерский A2",
-    description: "Повседневные ситуации, прошедшее время и расширенный словарь.",
-    lessons: 72,
-    modules: 14,
-    hours: 38,
-    progress: 0,
-    state: "locked",
-  },
-  {
-    id: "b1",
-    code: "B1",
-    title: "Венгерский B1",
-    description: "Свободные диалоги, падежи и работа с настоящими текстами.",
-    lessons: 84,
-    modules: 16,
-    hours: 46,
-    progress: 0,
-    state: "locked",
-  },
-  {
-    id: "speaking",
-    code: "SPK",
-    title: "Разговорный венгерский",
-    description: "Живые диалоги, интонация и уверенная речь в реальных ситуациях.",
-    lessons: 40,
-    modules: 8,
-    hours: 22,
-    progress: 0,
-    state: "soon",
-  },
-];
 
 export type LessonState = "done" | "current" | "available" | "locked";
 
@@ -144,119 +35,51 @@ export const a1Modules: CourseModule[] = [
     code: "01",
     title: "Первые шаги",
     lessons: [
-      { id: "a1-1", number: 1, title: "Приветствие", hu: "Köszöntés", state: "done" },
-      { id: "a1-2", number: 2, title: "Знакомство", hu: "Ismerkedés", state: "done" },
-      { id: "a1-3", number: 3, title: "Основные выражения", hu: "Alapkifejezések", state: "done" },
+      { id: "a1-1", number: 1, title: "Приветствие", hu: "Köszöntés" , state: "available" as LessonState },
+      { id: "a1-2", number: 2, title: "Знакомство", hu: "Ismerkedés" , state: "available" as LessonState },
+      { id: "a1-3", number: 3, title: "Основные выражения", hu: "Alapkifejezések" , state: "available" as LessonState },
     ],
   },
   {
     code: "02",
     title: "Основы общения",
     lessons: [
-      { id: "a1-4", number: 4, title: "Числа", hu: "Számok", state: "done" },
-      { id: "a1-5", number: 5, title: "Возраст", hu: "Életkor", state: "done" },
-      { id: "a1-6", number: 6, title: "Семья", hu: "Család", state: "available" },
-      { id: "a1-7", number: 7, title: "Профессии", hu: "Foglalkozások", state: "locked" },
+      { id: "a1-4", number: 4, title: "Числа", hu: "Számok" , state: "available" as LessonState },
+      { id: "a1-5", number: 5, title: "Возраст", hu: "Életkor" , state: "available" as LessonState },
+      { id: "a1-6", number: 6, title: "Семья", hu: "Család" , state: "available" as LessonState },
+      { id: "a1-7", number: 7, title: "Профессии", hu: "Foglalkozások" , state: "available" as LessonState },
     ],
   },
   {
     code: "03",
     title: "Повседневная жизнь",
     lessons: [
-      { id: "a1-11", number: 11, title: "Мой день", hu: "A napom", state: "done" },
-      { id: "a1-12", number: 12, title: "Знакомство и рассказ о себе", hu: "Bemutatkozás", state: "current" },
-      { id: "a1-13", number: 13, title: "Еда", hu: "Étel", state: "locked" },
-      { id: "a1-14", number: 14, title: "Город", hu: "Város", state: "locked" },
+      { id: "a1-8", number: 8, title: "Мой день", hu: "A napom" , state: "available" as LessonState },
+      { id: "a1-9", number: 9, title: "Знакомство и рассказ о себе", hu: "Bemutatkozás" , state: "available" as LessonState },
+      { id: "a1-10", number: 10, title: "Еда", hu: "Étel" , state: "available" as LessonState },
+      { id: "a1-11", number: 11, title: "Город", hu: "Város" , state: "available" as LessonState },
     ],
   },
   {
     code: "04",
     title: "Город и транспорт",
     lessons: [
-      { id: "a1-15", number: 15, title: "Транспорт", hu: "Közlekedés", state: "locked" },
-      { id: "a1-16", number: 16, title: "Покупки", hu: "Vásárlás", state: "locked" },
-      { id: "a1-17", number: 17, title: "В кафе", hu: "A kávézóban", state: "locked" },
+      { id: "a1-12", number: 12, title: "Транспорт", hu: "Közlekedés" , state: "available" as LessonState },
+      { id: "a1-13", number: 13, title: "Покупки", hu: "Vásárlás" , state: "available" as LessonState },
+      { id: "a1-14", number: 14, title: "В кафе", hu: "A kávézóban" , state: "available" as LessonState },
     ],
   },
 ];
 
-export type LessonStep =
-  | { kind: "theory"; title: string; body: string; examples: { hu: string; ru: string }[] }
-  | { kind: "word"; hu: string; ru: string; transcription: string; hint: string }
-  | { kind: "choice"; prompt: string; options: string[]; correct: number }
-  | { kind: "input"; prompt: string; hu: string; answers: string[] }
-  | { kind: "build"; prompt: string; tokens: string[]; correct: string[]; ru: string }
-  | { kind: "listen"; prompt: string; hu: string; options: string[]; correct: number };
+export const a1LessonIds = a1Modules.flatMap((m) => m.lessons.map((l) => l.id));
 
-export const lessonSteps: LessonStep[] = [
-  {
-    kind: "theory",
-    title: "Как представиться по-венгерски",
-    body: "В венгерском языке имя обычно называют после фразы «A nevem…» — «Меня зовут…». Ударение всегда падает на первый слог.",
-    examples: [
-      { hu: "A nevem Sándor.", ru: "Меня зовут Шандор." },
-      { hu: "Örvendek!", ru: "Приятно познакомиться!" },
-    ],
-  },
-  {
-    kind: "word",
-    hu: "Köszönöm",
-    ru: "Спасибо",
-    transcription: "[кёсёнём]",
-    hint: "Более короткий вариант — «Kösz», уместен в неформальной речи.",
-  },
-  {
-    kind: "choice",
-    prompt: "Как переводится «Köszönöm»?",
-    options: ["Привет", "Спасибо", "Пожалуйста", "До свидания"],
-    correct: 1,
-  },
-  {
-    kind: "input",
-    prompt: "Введите перевод слова",
-    hu: "Jó reggelt",
-    answers: ["доброе утро", "доброе утро!"],
-  },
-  {
-    kind: "build",
-    prompt: "Составьте предложение",
-    ru: "Меня зовут Александр.",
-    tokens: ["nevem", "Sándor", "A", "."],
-    correct: ["A", "nevem", "Sándor", "."],
-  },
-  {
-    kind: "listen",
-    prompt: "Прослушайте и выберите услышанное слово",
-    hu: "Viszlát",
-    options: ["Viszlát", "Vasárnap", "Virág", "Város"],
-    correct: 0,
-  },
-  {
-    kind: "choice",
-    prompt: "Какое приветствие используют утром?",
-    options: ["Jó estét", "Jó reggelt", "Jó éjszakát", "Viszlát"],
-    correct: 1,
-  },
-  {
-    kind: "word",
-    hu: "Örvendek",
-    ru: "Приятно познакомиться",
-    transcription: "[ёрвендек]",
-    hint: "Употребляется при первом знакомстве.",
-  },
-  {
-    kind: "input",
-    prompt: "Введите перевод слова",
-    hu: "Igen",
-    answers: ["да"],
-  },
-  {
-    kind: "choice",
-    prompt: "Выберите правильный ответ на «Hogy vagy?»",
-    options: ["Köszönöm, jól", "Viszlát", "Nem értem", "Jó éjszakát"],
-    correct: 0,
-  },
-];
+export function findLesson(lessonId: string) {
+  for (const m of a1Modules) {
+    const lesson = m.lessons.find((l) => l.id === lessonId);
+    if (lesson) return { ...lesson, module: m };
+  }
+  return null;
+}
 
 export type DictionaryEntry = {
   hu: string;
@@ -267,82 +90,33 @@ export type DictionaryEntry = {
 };
 
 export const dictionary: DictionaryEntry[] = [
-  { hu: "Szia", ru: "Привет", transcription: "[сиа]", category: "Приветствия", status: "learned" },
-  { hu: "Köszönöm", ru: "Спасибо", transcription: "[кёсёнём]", category: "Базовое", status: "learned" },
-  { hu: "Jó reggelt", ru: "Доброе утро", transcription: "[йо реггельт]", category: "Приветствия", status: "learning" },
-  { hu: "Viszlát", ru: "До свидания", transcription: "[висláт]", category: "Приветствия", status: "learned" },
-  { hu: "Igen", ru: "Да", transcription: "[иген]", category: "Базовое", status: "learned" },
-  { hu: "Nem", ru: "Нет", transcription: "[нем]", category: "Базовое", status: "learned" },
-  { hu: "Kérem", ru: "Пожалуйста", transcription: "[керем]", category: "Базовое", status: "learning" },
+  { hu: "Szia", ru: "Привет", transcription: "[сиа]", category: "Приветствия", status: "new" },
+  { hu: "Köszönöm", ru: "Спасибо", transcription: "[кёсёнём]", category: "Базовое", status: "new" },
+  { hu: "Jó reggelt", ru: "Доброе утро", transcription: "[йо реггельт]", category: "Приветствия", status: "new" },
+  { hu: "Viszlát", ru: "До свидания", transcription: "[вислат]", category: "Приветствия", status: "new" },
+  { hu: "Igen", ru: "Да", transcription: "[иген]", category: "Базовое", status: "new" },
+  { hu: "Nem", ru: "Нет", transcription: "[нем]", category: "Базовое", status: "new" },
+  { hu: "Kérem", ru: "Пожалуйста", transcription: "[керем]", category: "Базовое", status: "new" },
   { hu: "Bocsánat", ru: "Извините", transcription: "[бочанат]", category: "Базовое", status: "new" },
-  { hu: "Egy", ru: "Один", transcription: "[эдь]", category: "Числа", status: "learned" },
-  { hu: "Kettő", ru: "Два", transcription: "[кеттё]", category: "Числа", status: "learning" },
+  { hu: "Egy", ru: "Один", transcription: "[эдь]", category: "Числа", status: "new" },
+  { hu: "Kettő", ru: "Два", transcription: "[кеттё]", category: "Числа", status: "new" },
   { hu: "Három", ru: "Три", transcription: "[харом]", category: "Числа", status: "new" },
-  { hu: "Anya", ru: "Мама", transcription: "[аня]", category: "Семья", status: "learned" },
-  { hu: "Apa", ru: "Папа", transcription: "[апа]", category: "Семья", status: "learning" },
+  { hu: "Anya", ru: "Мама", transcription: "[аня]", category: "Семья", status: "new" },
+  { hu: "Apa", ru: "Папа", transcription: "[апа]", category: "Семья", status: "new" },
   { hu: "Testvér", ru: "Брат / сестра", transcription: "[тештвер]", category: "Семья", status: "new" },
 ];
 
 export const dictionaryCategories = ["Все", "Приветствия", "Базовое", "Числа", "Семья"] as const;
 
-export type AchievementId =
-  | "first-lesson"
-  | "streak-7"
-  | "words-100"
-  | "first-module"
-  | "lessons-20"
-  | "perfect";
-
-export const achievements: {
-  id: AchievementId;
-  title: string;
-  description: string;
-  icon: "award" | "flame" | "star" | "trophy" | "book" | "target";
-  unlocked: boolean;
-  progress: number;
-}[] = [
-  { id: "first-lesson", title: "Первый урок", description: "Начало пути", icon: "book", unlocked: true, progress: 100 },
-  { id: "streak-7", title: "7 дней подряд", description: "Серия занятий", icon: "flame", unlocked: true, progress: 100 },
-  { id: "words-100", title: "100 слов", description: "Словарь растёт", icon: "star", unlocked: true, progress: 100 },
-  { id: "first-module", title: "Первый модуль", description: "Модуль 01 завершён", icon: "award", unlocked: true, progress: 100 },
-  { id: "lessons-20", title: "20 уроков", description: "21 из 20 уроков", icon: "trophy", unlocked: true, progress: 100 },
-  { id: "perfect", title: "Идеальный результат", description: "Урок без единой ошибки", icon: "target", unlocked: false, progress: 60 },
-];
-
-export const weeklyActivity = [
-  { day: "Пн", minutes: 18, words: 12 },
-  { day: "Вт", minutes: 25, words: 18 },
-  { day: "Ср", minutes: 12, words: 8 },
-  { day: "Чт", minutes: 32, words: 24 },
-  { day: "Пт", minutes: 22, words: 15 },
-  { day: "Сб", minutes: 40, words: 29 },
-  { day: "Вс", minutes: 28, words: 21 },
-];
-
-export const weeklyWords = [
-  { week: "1 нед.", words: 34 },
-  { week: "2 нед.", words: 52 },
-  { week: "3 нед.", words: 71 },
-  { week: "4 нед.", words: 89 },
-];
-
-export const accuracyData = [
-  { name: "Верно", value: 87 },
-  { name: "Ошибки", value: 13 },
-];
-
-export const skillProgress = [
-  { section: "Словарь", value: 62 },
-  { section: "Грамматика", value: 41 },
-  { section: "Чтение", value: 47 },
-  { section: "Аудирование", value: 35 },
-  { section: "Произношение", value: 28 },
-];
-
-export const activityCalendar: { day: number; level: number }[] = Array.from(
-  { length: 91 },
-  (_, i) => ({ day: i, level: Math.floor((Math.sin(i * 1.7) + 1) * 2.4) % 5 }),
-);
+/** Achievement definitions. Unlock state is derived from real progress. */
+export const achievementDefs = [
+  { id: "first-lesson", title: "Первый урок", description: "Пройдите первый урок", icon: "book", target: 1, metric: "lessons" },
+  { id: "lessons-5", title: "5 уроков", description: "Пройдите 5 уроков", icon: "trophy", target: 5, metric: "lessons" },
+  { id: "module-1", title: "Первый модуль", description: "Завершите все уроки модуля 01", icon: "award", target: 3, metric: "lessons" },
+  { id: "streak-3", title: "3 дня подряд", description: "Занимайтесь три дня подряд", icon: "flame", target: 3, metric: "streak" },
+  { id: "words-20", title: "20 слов", description: "Выучите 20 новых слов", icon: "star", target: 20, metric: "words" },
+  { id: "perfect", title: "Идеальный результат", description: "Пройдите урок без ошибок", icon: "target", target: 1, metric: "perfect" },
+] as const;
 
 export const accessCopy: Record<
   AccessStatus,
@@ -351,17 +125,91 @@ export const accessCopy: Record<
   active: { title: "Доступ активен", description: "Все материалы курса открыты." },
   pending: {
     title: "Доступ ожидает активации",
-    description: "Ваш аккаунт создан, но курс пока не активирован.",
+    description:
+      "Ваш аккаунт создан. Для получения доступа к курсам необходимо активировать подписку.",
     cta: "Связаться с HunMaster",
   },
   expired: {
     title: "Срок доступа закончился",
-    description: "Прогресс сохранён. Продлите доступ, чтобы продолжить обучение.",
+    description: "Ваш прогресс сохранён. Для продления доступа свяжитесь с HunMaster.",
     cta: "Продлить доступ",
   },
   blocked: {
     title: "Доступ к аккаунту ограничен",
-    description: "Обратитесь в поддержку, чтобы восстановить доступ.",
+    description: "Для получения информации обратитесь в поддержку.",
     cta: "Написать в поддержку",
   },
 };
+/** Empty until real notifications are delivered from the backend. */
+export const notifications: { title: string; text: string; time: string }[] = [];
+
+/** Static catalogue metadata (content, not user data). */
+export const courses = [
+  { id: "a1", code: "A1", title: "Венгерский A1", description: "База: алфавит, приветствия, числа, первые диалоги.", lessons: a1LessonIds.length, modules: a1Modules.length, hours: 24, progress: 0, state: "available" as "available" | "soon" | "locked" },
+  { id: "a2", code: "A2", title: "Венгерский A2", description: "Расширение лексики и грамматики повседневного общения.", lessons: 0, modules: 0, hours: 0, progress: 0, state: "soon" as "available" | "soon" | "locked" },
+  { id: "b1", code: "B1", title: "Венгерский B1", description: "Свободные диалоги, работа и учёба.", lessons: 0, modules: 0, hours: 0, progress: 0, state: "soon" as "available" | "soon" | "locked" },
+  { id: "speaking", code: "SP", title: "Разговорный клуб", description: "Практика речи с преподавателем.", lessons: 0, modules: 0, hours: 0, progress: 0, state: "soon" as "available" | "soon" | "locked" },
+];
+
+/** Zeroed placeholders: replaced by real values from getLearningStats. */
+export const learningStats = {
+  courseProgress: 0,
+  wordsLearned: 0,
+  lessonsDone: 0,
+  lessonsTotal: a1LessonIds.length,
+  streak: 0,
+  timeSpent: "0 ч",
+};
+
+export const currentLesson = {
+  id: a1LessonIds[0]!,
+  courseId: "a1",
+  courseTitle: "Венгерский A1",
+  module: a1Modules[0]!.title,
+  number: 1,
+  title: a1Modules[0]!.lessons[0]!.title,
+  duration: "15 мин",
+  tasks: 8,
+  progress: 0,
+};
+
+export const weeklyActivity = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"].map((day) => ({ day, minutes: 0, words: 0 }));
+export const weeklyWords = [1, 2, 3, 4].map((n) => ({ week: `${n} нед.`, words: 0 }));
+export const accuracyData = [
+  { name: "Верно", value: 0 },
+  { name: "Ошибки", value: 100 },
+];
+export const skillProgress = [
+  { section: "Лексика", skill: "Лексика", value: 0 },
+  { section: "Грамматика", skill: "Грамматика", value: 0 },
+  { section: "Аудирование", skill: "Аудирование", value: 0 },
+  { section: "Речь", skill: "Речь", value: 0 },
+];
+export const activityCalendar = Array.from({ length: 91 }, (_, i) => ({ date: `d${i}`, day: i, level: 0 }));
+
+/** Achievement list with locked state until real progress unlocks them. */
+export const achievements = achievementDefs.map((a) => ({ ...a, unlocked: false, progress: 0 }));
+
+export type LessonStep =
+  | { kind: "theory"; title: string; body: string; examples: { hu: string; ru: string }[] }
+  | { kind: "word"; hu: string; ru: string; transcription: string; hint?: string }
+  | { kind: "choice"; prompt: string; options: string[]; correct: number }
+  | { kind: "listen"; prompt: string; options: string[]; correct: number }
+  | { kind: "input"; prompt: string; hu: string; answers: string[] }
+  | { kind: "build"; prompt: string; ru: string; tokens: string[]; correct: string[] };
+
+/** Placeholder step list; protected content is fetched from the server. */
+export const lessonSteps: LessonStep[] = [
+  {
+    kind: "theory",
+    title: "Приветствие",
+    body: "Szia — неформальное «привет». Jó napot — вежливое «добрый день».",
+    examples: [
+      { hu: "Szia!", ru: "Привет!" },
+      { hu: "Jó napot!", ru: "Добрый день!" },
+    ],
+  },
+  { kind: "word", hu: "Köszönöm", ru: "Спасибо", transcription: "[кёсёнём]", hint: "Вежливая форма" },
+  { kind: "choice", prompt: "Как сказать «Спасибо»?", options: ["Kérem", "Köszönöm", "Viszlát"], correct: 1 },
+  { kind: "input", prompt: "Переведите на венгерский", hu: "Да", answers: ["igen"] },
+];
