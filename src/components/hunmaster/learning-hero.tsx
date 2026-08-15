@@ -139,7 +139,7 @@ export function LearningHero() {
             <div className="mt-5 rounded-2xl border border-border/60 bg-secondary/25 p-4">
               <div className="text-xs text-muted-foreground">Активность за неделю</div>
               <div className="-mx-2 mt-1">
-                <WeeklyActivityChart height={130} />
+                <WeeklyActivityChart height={130} data={data?.weeklyActivity} />
               </div>
             </div>
           </GlassPanel>
