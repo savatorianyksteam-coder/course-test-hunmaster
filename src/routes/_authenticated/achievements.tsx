@@ -5,7 +5,7 @@ import { GlassPanel } from "@/components/hunmaster/glass-panel";
 import { PageShell, Stagger, StaggerItem } from "@/components/hunmaster/page-shell";
 import { achievements } from "@/data/hunmaster";
 
-export const Route = createFileRoute("/achievements")({
+export const Route = createFileRoute("/_authenticated/achievements")({
   head: () => ({
     meta: [
       { title: "Достижения — HunMaster Learn" },

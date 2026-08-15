@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/mock-auth";
 import { accessCopy, brand, learningStats, type AccessStatus } from "@/data/hunmaster";
 
-export const Route = createFileRoute("/profile")({
+export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
       { title: "Профиль ученика — HunMaster Learn" },

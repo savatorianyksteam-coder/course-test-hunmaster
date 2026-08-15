@@ -7,7 +7,7 @@ import { PageShell, Stagger, StaggerItem } from "@/components/hunmaster/page-she
 import { Input } from "@/components/ui/input";
 import { dictionary, dictionaryCategories } from "@/data/hunmaster";
 
-export const Route = createFileRoute("/dictionary")({
+export const Route = createFileRoute("/_authenticated/dictionary")({
   head: () => ({
     meta: [
       { title: "Словарь венгерских слов — HunMaster Learn" },

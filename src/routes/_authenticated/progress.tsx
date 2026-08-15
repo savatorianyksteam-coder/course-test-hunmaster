@@ -7,7 +7,7 @@ import { AnimatedCounter } from "@/components/hunmaster/animated-counter";
 import { AccuracyChart, WeeklyActivityChart, WordsChart } from "@/components/hunmaster/charts";
 import { activityCalendar, learningStats, skillProgress } from "@/data/hunmaster";
 
-export const Route = createFileRoute("/progress")({
+export const Route = createFileRoute("/_authenticated/progress")({
   head: () => ({
     meta: [
       { title: "Прогресс обучения — HunMaster Learn" },
