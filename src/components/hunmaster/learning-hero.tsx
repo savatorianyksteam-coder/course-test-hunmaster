@@ -2,15 +2,24 @@ import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ArrowRight, BookOpen, Flame, Layers, Sparkles, Target } from "lucide-react";
 import { useEffect, useState } from "react";
-import { currentLesson, learningStats } from "@/data/hunmaster";
-import { useAuth } from "@/lib/mock-auth";
+import { currentLesson } from "@/data/hunmaster";
+import { useAuth } from "@/hooks/useAuth";
+import { useLearningStats } from "@/hooks/useLearningStats";
 import { AnimatedCounter } from "./animated-counter";
 import { GlassPanel } from "./glass-panel";
 import { MagneticButton } from "./magnetic-button";
 import { WeeklyActivityChart } from "./charts";
 
 export function LearningHero() {
-  const { user } = useAuth();
+  const { profile } = useAuth();
+  const { data } = useLearningStats();
+  const learningStats = {
+    courseProgress: data?.courseProgress ?? 0,
+    wordsLearned: data?.wordsLearned ?? 0,
+    lessonsDone: data?.lessonsCompleted ?? 0,
+    lessonsTotal: data?.lessonsTotal ?? 0,
+    streak: data?.streak ?? 0,
+  };
   const [offset, setOffset] = useState(0);
   const [fill, setFill] = useState(0);
 
@@ -22,10 +31,10 @@ export function LearningHero() {
       window.removeEventListener("scroll", onScroll);
       window.clearTimeout(t);
     };
-  }, []);
+  }, [learningStats.courseProgress]);
 
   const stats = [
-    { icon: Target, label: "Уровень", value: user?.level ?? "A1" },
+    { icon: Target, label: "Уровень", value: "A1" },
     { icon: Flame, label: "Серия", value: `${learningStats.streak} дней` },
     { icon: BookOpen, label: "Изучено слов", value: learningStats.wordsLearned },
     {
@@ -57,7 +66,7 @@ export function LearningHero() {
             HunMaster Learn · закрытая платформа
           </span>
           <h1 className="mt-6 text-4xl leading-[1.05] font-bold sm:text-6xl">
-            С возвращением, <span className="text-gradient">{user?.name ?? "ученик"}</span>
+            С возвращением, <span className="text-gradient">{profile?.name ?? "ученик"}</span>
           </h1>
           <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             Продолжим изучать венгерский?
@@ -91,7 +100,7 @@ export function LearningHero() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-muted-foreground">Learning overview</div>
-                <div className="font-display text-2xl font-bold">Венгерский {user?.level}</div>
+                <div className="font-display text-2xl font-bold">Венгерский A1</div>
               </div>
               <div className="flex items-center gap-1.5 rounded-full bg-primary/12 px-3 py-1.5 text-xs font-medium text-primary">
                 <Flame className="size-3.5" /> {learningStats.streak} дней подряд
