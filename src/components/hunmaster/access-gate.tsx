@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { AlertTriangle, Clock, Lock, ShieldCheck, Send } from "lucide-react";
 import type { ReactNode } from "react";
 import { accessCopy, brand } from "@/data/hunmaster";
-import { useAuth } from "@/lib/mock-auth";
+import { useAuth } from "@/hooks/useAuth";
 import { GlassPanel } from "./glass-panel";
 import { Button } from "@/components/ui/button";
 
@@ -15,7 +15,14 @@ const icons = {
 
 /** Renders children only when demo access is active; otherwise shows a status screen. */
 export function AccessGate({ children }: { children: ReactNode }) {
-  const { accessStatus } = useAuth();
+  const { accessStatus, profileLoading } = useAuth();
+  if (profileLoading) {
+    return (
+      <GlassPanel className="mx-auto max-w-xl p-10 text-center">
+        <p className="text-sm text-muted-foreground">Проверяем доступ…</p>
+      </GlassPanel>
+    );
+  }
   if (accessStatus === "active") return <>{children}</>;
 
   const copy = accessCopy[accessStatus];
@@ -42,11 +49,11 @@ export function AccessGate({ children }: { children: ReactNode }) {
         </a>
       </p>
       <p className="mt-6 text-xs text-muted-foreground">
-        Статус доступа переключается в{" "}
+        Текущий статус доступа виден в{" "}
         <Link to="/profile" className="text-primary underline-offset-4 hover:underline">
           профиле
-        </Link>{" "}
-        (демо-режим).
+        </Link>
+        .
       </p>
     </GlassPanel>
   );
