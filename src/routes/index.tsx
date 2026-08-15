@@ -7,7 +7,8 @@ import { AnimatedCounter } from "@/components/hunmaster/animated-counter";
 import { Stagger, StaggerItem } from "@/components/hunmaster/page-shell";
 import { CourseEmblem } from "@/components/hunmaster/course-emblem";
 import { Button } from "@/components/ui/button";
-import { a1Modules, courses, currentLesson, learningStats } from "@/data/hunmaster";
+import { a1Modules, a1LessonIds, courses } from "@/data/hunmaster";
+import { useLearningStats } from "@/hooks/useLearningStats";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,10 +31,26 @@ export const Route = createFileRoute("/")({
 
 function Dashboard() {
   const active = courses[0]!;
-  const upcoming = a1Modules
-    .flatMap((m) => m.lessons.map((l) => ({ ...l, module: m.title })))
-    .filter((l) => l.state === "current" || l.state === "available")
-    .slice(0, 3);
+  const { data } = useLearningStats();
+  const done = new Set(data?.completedLessonIds ?? []);
+  const allLessons = a1Modules.flatMap((m) => m.lessons.map((l) => ({ ...l, module: m.title })));
+  const upcoming = allLessons.filter((l) => !done.has(l.id)).slice(0, 3);
+  const next = upcoming[0] ?? allLessons[0]!;
+  const learningStats = {
+    courseProgress: data?.courseProgress ?? 0,
+    wordsLearned: data?.wordsLearned ?? 0,
+    streak: data?.streak ?? 0,
+    timeSpent: `${Math.round((data?.minutesSpent ?? 0) / 60)} ч`,
+  };
+  const currentLesson = {
+    id: next.id,
+    number: next.number,
+    title: next.title,
+    module: next.module,
+    duration: "15 мин",
+    tasks: 0,
+    progress: Math.round(((data?.lessonsCompleted ?? 0) / (a1LessonIds.length || 1)) * 100),
+  };
 
   return (
     <>
@@ -114,8 +131,7 @@ function Dashboard() {
                     Урок {currentLesson.number} — {currentLesson.title}
                   </h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {currentLesson.module} · {currentLesson.duration} · {currentLesson.tasks}{" "}
-                    заданий
+                    {currentLesson.module} · {currentLesson.duration}
                   </p>
                   <div className="mt-5">
                     <div className="flex justify-between text-xs text-muted-foreground">
