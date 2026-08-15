@@ -7,7 +7,7 @@ import { PageShell, Stagger, StaggerItem } from "@/components/hunmaster/page-she
 import { AnimatedCounter } from "@/components/hunmaster/animated-counter";
 import { a1Modules, courses, learningStats, type LessonState } from "@/data/hunmaster";
 
-export const Route = createFileRoute("/courses/$courseId")({
+export const Route = createFileRoute("/_authenticated/courses/$courseId")({
   head: () => ({
     meta: [
       { title: "Венгерский язык A1 — HunMaster Learn" },

@@ -2,7 +2,8 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Bell, LogOut, Menu, Moon, Settings, Sun, User, X } from "lucide-react";
 import { useState } from "react";
 import { navItems, notifications } from "@/data/hunmaster";
-import { useAuth } from "@/lib/mock-auth";
+import { useAuth } from "@/hooks/useAuth";
+import { useSignOut } from "@/hooks/useSignOut";
 import { useTheme } from "@/components/hunmaster/theme-provider";
 import { BrandMark } from "./brand-mark";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,8 @@ import {
 
 export function AppHeader() {
   const { theme, toggle } = useTheme();
-  const { user, isAuthenticated, signOut } = useAuth();
+  const { profile, isAuthenticated } = useAuth();
+  const signOut = useSignOut();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
@@ -86,14 +88,14 @@ export function AppHeader() {
                     className="flex items-center gap-2 rounded-full border border-border/70 py-1 pr-3 pl-1 transition-colors hover:bg-secondary/60"
                   >
                     <span className="grid size-7 place-items-center rounded-full bg-[image:var(--gradient-brand)] font-display text-xs font-bold text-primary-foreground">
-                      {user?.name.slice(0, 1)}
+                      {(profile?.name ?? "?").slice(0, 1)}
                     </span>
-                    <span className="hidden text-sm font-medium sm:inline">{user?.name}</span>
+                    <span className="hidden text-sm font-medium sm:inline">{profile?.name}</span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52 rounded-2xl">
                   <DropdownMenuLabel className="text-xs text-muted-foreground">
-                    {user?.email}
+                    {profile ? `@${profile.username}` : ""}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
@@ -104,10 +106,7 @@ export function AppHeader() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => {
-                      signOut();
-                      navigate({ to: "/login" });
-                    }}
+                    onClick={() => void signOut()}
                   >
                     <LogOut className="mr-2 size-4" /> Выйти
                   </DropdownMenuItem>

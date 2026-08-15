@@ -3,9 +3,10 @@ import { Award, BookOpen, Flame, Lock, Star, Target, Trophy } from "lucide-react
 import { AccessGate } from "@/components/hunmaster/access-gate";
 import { GlassPanel } from "@/components/hunmaster/glass-panel";
 import { PageShell, Stagger, StaggerItem } from "@/components/hunmaster/page-shell";
-import { achievements } from "@/data/hunmaster";
+import { achievementDefs } from "@/data/hunmaster";
+import { useLearningStats } from "@/hooks/useLearningStats";
 
-export const Route = createFileRoute("/achievements")({
+export const Route = createFileRoute("/_authenticated/achievements")({
   head: () => ({
     meta: [
       { title: "Достижения — HunMaster Learn" },
@@ -23,6 +24,22 @@ export const Route = createFileRoute("/achievements")({
 const icons = { award: Award, flame: Flame, star: Star, trophy: Trophy, book: BookOpen, target: Target };
 
 function AchievementsPage() {
+  const { data } = useLearningStats();
+  const value = (metric: string) => {
+    if (metric === "lessons") return data?.lessonsCompleted ?? 0;
+    if (metric === "streak") return data?.streak ?? 0;
+    if (metric === "words") return data?.wordsLearned ?? 0;
+    if (metric === "perfect") return data?.perfectLessons ?? 0;
+    return 0;
+  };
+  const achievements = achievementDefs.map((a) => {
+    const current = value(a.metric);
+    return {
+      ...a,
+      unlocked: current >= a.target,
+      progress: Math.min(100, Math.round((current / a.target) * 100)),
+    };
+  });
   const unlocked = achievements.filter((a) => a.unlocked).length;
 
   return (

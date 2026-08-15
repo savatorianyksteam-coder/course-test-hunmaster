@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { currentLesson, lessonSteps } from "@/data/hunmaster";
 
-export const Route = createFileRoute("/lesson/$lessonId")({
+export const Route = createFileRoute("/_authenticated/lesson/$lessonId")({
   head: () => ({
     meta: [
       { title: "Урок 12 — Знакомство и рассказ о себе | HunMaster Learn" },

@@ -7,7 +7,7 @@ import { PageShell, Stagger, StaggerItem } from "@/components/hunmaster/page-she
 import { Button } from "@/components/ui/button";
 import { courses } from "@/data/hunmaster";
 
-export const Route = createFileRoute("/courses/")({
+export const Route = createFileRoute("/_authenticated/courses/")({
   head: () => ({
     meta: [
       { title: "Мои курсы — HunMaster Learn" },

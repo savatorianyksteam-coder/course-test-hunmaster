@@ -12,7 +12,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { accuracyData, weeklyActivity, weeklyWords } from "@/data/hunmaster";
+type Point = { day: string; minutes: number; words: number };
+
+const emptyWeek: Point[] = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((day) => ({
+  day,
+  minutes: 0,
+  words: 0,
+}));
+const emptyWords = [1, 2, 3, 4].map((n) => ({ week: `${n} нед.`, words: 0 }));
 
 const tooltipStyle = {
   background: "var(--popover)",
@@ -22,7 +29,14 @@ const tooltipStyle = {
   fontSize: "12px",
 } as const;
 
-export function WeeklyActivityChart({ height = 220 }: { height?: number }) {
+export function WeeklyActivityChart({
+  height = 220,
+  data,
+}: {
+  height?: number;
+  data?: Point[];
+}) {
+  const weeklyActivity = data?.length ? data : emptyWeek;
   return (
     <ResponsiveContainer width="100%" height={height}>
       <AreaChart data={weeklyActivity} margin={{ top: 10, right: 8, left: -22, bottom: 0 }}>
@@ -49,7 +63,8 @@ export function WeeklyActivityChart({ height = 220 }: { height?: number }) {
   );
 }
 
-export function WordsChart() {
+export function WordsChart({ data }: { data?: { week: string; words: number }[] }) {
+  const weeklyWords = data?.length ? data : emptyWords;
   return (
     <ResponsiveContainer width="100%" height={200}>
       <BarChart data={weeklyWords} margin={{ top: 10, right: 8, left: -22, bottom: 0 }}>
@@ -63,7 +78,12 @@ export function WordsChart() {
   );
 }
 
-export function AccuracyChart() {
+export function AccuracyChart({ accuracy }: { accuracy?: number | null }) {
+  const value = accuracy ?? 0;
+  const accuracyData = [
+    { name: "Верно", value },
+    { name: "Ошибки", value: 100 - value },
+  ];
   const colors = ["var(--brand-green)", "var(--secondary)"];
   return (
     <div className="relative">
@@ -87,7 +107,7 @@ export function AccuracyChart() {
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 grid place-items-center">
         <div className="text-center">
-          <div className="font-display text-2xl font-bold">87%</div>
+          <div className="font-display text-2xl font-bold">{accuracy === null || accuracy === undefined ? "—" : `${value}%`}</div>
           <div className="text-xs text-muted-foreground">точность</div>
         </div>
       </div>
