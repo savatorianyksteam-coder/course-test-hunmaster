@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AuthenticatedAchievementsRouteImport } from './routes/_authenticated/achievements'
@@ -26,6 +27,10 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -38,29 +43,29 @@ const RegisterRoute = RegisterRouteImport.update({
 } as any)
 const AuthenticatedAchievementsRoute =
   AuthenticatedAchievementsRouteImport.update({
-    id: '/_authenticated/achievements',
+    id: '/achievements',
     path: '/achievements',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCoursesRoute = AuthenticatedCoursesRouteImport.update({
-  id: '/_authenticated/courses',
+  id: '/courses',
   path: '/courses',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDictionaryRoute = AuthenticatedDictionaryRouteImport.update({
-  id: '/_authenticated/dictionary',
+  id: '/dictionary',
   path: '/dictionary',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
-  id: '/_authenticated/profile',
+  id: '/profile',
   path: '/profile',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProgressRoute = AuthenticatedProgressRouteImport.update({
-  id: '/_authenticated/progress',
+  id: '/progress',
   path: '/progress',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCoursesIndexRoute =
   AuthenticatedCoursesIndexRouteImport.update({
@@ -76,9 +81,9 @@ const AuthenticatedCoursesCourseIdRoute =
   } as any)
 const AuthenticatedLessonLessonIdRoute =
   AuthenticatedLessonLessonIdRouteImport.update({
-    id: '/_authenticated/lesson/$lessonId',
+    id: '/lesson/$lessonId',
     path: '/lesson/$lessonId',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -109,6 +114,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/_authenticated/achievements': typeof AuthenticatedAchievementsRoute
@@ -149,6 +155,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/login'
     | '/register'
     | '/_authenticated/achievements'
@@ -163,14 +170,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
-  AuthenticatedAchievementsRoute: typeof AuthenticatedAchievementsRoute
-  AuthenticatedCoursesRoute: typeof AuthenticatedCoursesRouteWithChildren
-  AuthenticatedDictionaryRoute: typeof AuthenticatedDictionaryRoute
-  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
-  AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
-  AuthenticatedLessonLessonIdRoute: typeof AuthenticatedLessonLessonIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -180,6 +182,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -201,35 +210,35 @@ declare module '@tanstack/react-router' {
       path: '/achievements'
       fullPath: '/achievements'
       preLoaderRoute: typeof AuthenticatedAchievementsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/courses': {
       id: '/_authenticated/courses'
       path: '/courses'
       fullPath: '/courses'
       preLoaderRoute: typeof AuthenticatedCoursesRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dictionary': {
       id: '/_authenticated/dictionary'
       path: '/dictionary'
       fullPath: '/dictionary'
       preLoaderRoute: typeof AuthenticatedDictionaryRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/progress': {
       id: '/_authenticated/progress'
       path: '/progress'
       fullPath: '/progress'
       preLoaderRoute: typeof AuthenticatedProgressRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/courses/': {
       id: '/_authenticated/courses/'
@@ -250,7 +259,7 @@ declare module '@tanstack/react-router' {
       path: '/lesson/$lessonId'
       fullPath: '/lesson/$lessonId'
       preLoaderRoute: typeof AuthenticatedLessonLessonIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
@@ -268,16 +277,32 @@ const AuthenticatedCoursesRouteChildren: AuthenticatedCoursesRouteChildren = {
 const AuthenticatedCoursesRouteWithChildren =
   AuthenticatedCoursesRoute._addFileChildren(AuthenticatedCoursesRouteChildren)
 
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  LoginRoute: LoginRoute,
-  RegisterRoute: RegisterRoute,
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAchievementsRoute: typeof AuthenticatedAchievementsRoute
+  AuthenticatedCoursesRoute: typeof AuthenticatedCoursesRouteWithChildren
+  AuthenticatedDictionaryRoute: typeof AuthenticatedDictionaryRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
+  AuthenticatedLessonLessonIdRoute: typeof AuthenticatedLessonLessonIdRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAchievementsRoute: AuthenticatedAchievementsRoute,
   AuthenticatedCoursesRoute: AuthenticatedCoursesRouteWithChildren,
   AuthenticatedDictionaryRoute: AuthenticatedDictionaryRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProgressRoute: AuthenticatedProgressRoute,
   AuthenticatedLessonLessonIdRoute: AuthenticatedLessonLessonIdRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
