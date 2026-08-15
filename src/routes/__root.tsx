@@ -14,7 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "@/components/hunmaster/theme-provider";
 import { AppHeader } from "@/components/hunmaster/app-header";
 import { AppFooter } from "@/components/hunmaster/app-footer";
-import { MockAuthProvider } from "@/lib/mock-auth";
+import { AuthProvider } from "@/contexts/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -141,7 +141,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <MockAuthProvider>
+        <AuthProvider>
           <AppHeader />
         <main className="min-h-screen">
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
@@ -149,7 +149,7 @@ function RootComponent() {
         </main>
         <AppFooter />
           <Toaster />
-        </MockAuthProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
