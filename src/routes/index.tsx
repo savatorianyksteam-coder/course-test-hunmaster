@@ -1,6 +1,7 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BookOpen, Clock, Flame, Layers, Sparkles } from "lucide-react";
+import { useEffect } from "react";
 import { LearningHero } from "@/components/hunmaster/learning-hero";
 import { GlassPanel } from "@/components/hunmaster/glass-panel";
 import { AccessGate } from "@/components/hunmaster/access-gate";
@@ -11,15 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearningStats } from "@/hooks/useLearningStats";
 import { fetchMyCourses } from "@/services/courses";
-import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
-  ssr: false,
-  beforeLoad: async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/login" });
-    return { user: data.user };
-  },
   head: () => ({
     meta: [
       { title: "HunMaster Learn — учебный дашборд" },
@@ -38,7 +32,8 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, ready, isAuthenticated } = useAuth();
   const { data: stats } = useLearningStats();
   const coursesQuery = useQuery({
     queryKey: ["my-courses", user?.id],
@@ -46,6 +41,22 @@ function Dashboard() {
     enabled: Boolean(user?.id),
   });
   const active = coursesQuery.data?.[0] ?? null;
+
+  useEffect(() => {
+    if (ready && !isAuthenticated) {
+      navigate({ to: "/login", replace: true });
+    }
+  }, [isAuthenticated, navigate, ready]);
+
+  if (!ready || !isAuthenticated) {
+    return (
+      <div className="aurora grain grid min-h-screen place-items-center px-4 py-32">
+        <GlassPanel className="w-full max-w-md p-8 text-center text-sm text-muted-foreground">
+          Проверяем сессию…
+        </GlassPanel>
+      </div>
+    );
+  }
 
   const learningStats = {
     courseProgress: stats?.courseProgress ?? active?.progress ?? 0,
