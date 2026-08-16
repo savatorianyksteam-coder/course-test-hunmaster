@@ -20,7 +20,10 @@ async function getServerEntry(): Promise<ServerEntry> {
 
 // h3 swallows in-handler throws into a normal 500 Response with body
 // {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
-async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
+async function normalizeCatastrophicSsrResponse(
+  response: Response,
+  request: Request,
+): Promise<Response> {
   if (response.status < 500) return response;
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) return response;
@@ -28,10 +31,29 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   const body = await response.clone().text();
   if (!isH3SwallowedErrorBody(body)) return response;
 
-  console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
+  logSsrError(
+    consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`),
+    request,
+    "h3_swallowed",
+  );
   return new Response(renderErrorPage(), {
     status: 500,
     headers: { "content-type": "text/html; charset=utf-8" },
+  });
+}
+
+function logSsrError(error: unknown, request: Request, source: string): void {
+  const url = new URL(request.url);
+  const details =
+    error instanceof Error
+      ? { name: error.name, message: error.message, stack: error.stack }
+      : { name: typeof error, message: String(error), stack: undefined };
+
+  console.error("[HunMaster SSR]", {
+    source,
+    method: request.method,
+    route: url.pathname,
+    ...details,
   });
 }
 
@@ -49,9 +71,9 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return await normalizeCatastrophicSsrResponse(response, request);
     } catch (error) {
-      console.error(error);
+      logSsrError(error, request, "fetch");
       return new Response(renderErrorPage(), {
         status: 500,
         headers: { "content-type": "text/html; charset=utf-8" },

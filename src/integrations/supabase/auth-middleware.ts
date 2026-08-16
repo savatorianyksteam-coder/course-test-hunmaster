@@ -4,8 +4,8 @@ import { getRequest } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
-function isNewSupabaseApiKey(value: string): boolean {
-  return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
+function isNewSupabasePublishableKey(value: string): boolean {
+  return value.startsWith("sb_publishable_");
 }
 
 function createSupabaseFetch(supabaseKey: string): typeof fetch {
@@ -20,7 +20,7 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 
     // New Supabase API keys are opaque strings, not bearer JWTs.
     if (
-      isNewSupabaseApiKey(supabaseKey) &&
+      isNewSupabasePublishableKey(supabaseKey) &&
       headers.get("Authorization") === `Bearer ${supabaseKey}`
     ) {
       headers.delete("Authorization");
