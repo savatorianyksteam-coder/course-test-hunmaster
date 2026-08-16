@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 export type WeekPoint = { day: string; minutes: number; words: number };
 export type LearningStats = {
@@ -19,37 +21,122 @@ export type LearningStats = {
   activityCalendar: { date: string; level: number }[];
 };
 
+export type LessonBlockContent = { [key: string]: Json | undefined };
+export type LessonBlock = {
+  id: string;
+  type: "text" | "heading" | "image" | "video" | "audio" | "vocabulary" | "exercise" | "quiz";
+  content: LessonBlockContent;
+  position: number;
+};
+
+export type LessonContentResult =
+  | { allowed: false; reason: "not_found" | "no_access" }
+  | {
+      allowed: true;
+      lesson: {
+        id: string;
+        courseId: string;
+        title: string;
+        description: string | null;
+        position: number;
+        videoUrl: string | null;
+      };
+      course: { id: string; title: string; slug: string };
+      blocks: LessonBlock[];
+      progress: number;
+      completed: boolean;
+    };
+
+type AuthedLearningContext = {
+  supabase: SupabaseClient<Database>;
+  userId: string;
+};
+
 const DAY_LABELS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 function dayKey(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-/** Authenticated: every learning metric shown in the UI is derived here from real rows. */
+function isActiveEnrollment(row: { status: string; expires_at: string | null }) {
+  return (
+    row.status === "active" && (!row.expires_at || new Date(row.expires_at).getTime() > Date.now())
+  );
+}
+
+function contentObject(value: Json): LessonBlockContent {
+  if (value && typeof value === "object" && !Array.isArray(value))
+    return value as LessonBlockContent;
+  return {};
+}
+
+function countVocabularyWords(content: LessonBlockContent) {
+  const items = content["items"];
+  if (Array.isArray(items)) return items.length;
+  return 0;
+}
+
+async function activeCourseIds(context: AuthedLearningContext) {
+  const { data, error } = await context.supabase
+    .from("enrollments")
+    .select("course_id, status, expires_at")
+    .eq("user_id", context.userId)
+    .eq("status", "active");
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as { course_id: string; status: string; expires_at: string | null }[])
+    .filter(isActiveEnrollment)
+    .map((row) => row.course_id);
+}
+
+/** Authenticated: every learning metric shown in the UI is derived from shared HunMaster rows. */
 export const getLearningStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<LearningStats> => {
-    const { a1LessonIds } = await import("@/data/hunmaster");
-    const { data, error } = await context.supabase
+    const courseIds = await activeCourseIds(context);
+    if (!courseIds.length) {
+      return emptyStats();
+    }
+
+    const { data: lessons, error: lessonsError } = await context.supabase
+      .from("lessons")
+      .select("id")
+      .in("course_id", courseIds)
+      .eq("status", "published");
+    if (lessonsError) throw new Error(lessonsError.message);
+
+    const lessonIds = ((lessons ?? []) as { id: string }[]).map((lesson) => lesson.id);
+    if (!lessonIds.length) return emptyStats();
+
+    const { data: progress, error: progressError } = await context.supabase
       .from("lesson_progress")
-      .select("lesson_id, completed, score, words_learned, duration_seconds, completed_at")
+      .select("lesson_id, completed, completed_at, progress")
       .eq("user_id", context.userId)
-      .eq("completed", true);
-    if (error) throw new Error(error.message);
+      .in("lesson_id", lessonIds);
+    if (progressError) throw new Error(progressError.message);
 
-    const rows = data ?? [];
-    const lessonsTotal = a1LessonIds.length;
+    const { data: vocabBlocks } = await context.supabase
+      .from("lesson_blocks")
+      .select("content")
+      .in("lesson_id", lessonIds)
+      .eq("type", "vocabulary");
+
+    const rows = (
+      (progress ?? []) as {
+        lesson_id: string;
+        completed: boolean;
+        completed_at: string | null;
+        progress: number;
+      }[]
+    ).filter((row) => row.completed);
+    const wordsLearned = ((vocabBlocks ?? []) as { content: Json }[]).reduce(
+      (sum, row) => sum + countVocabularyWords(contentObject(row.content)),
+      0,
+    );
+    const lessonsTotal = lessonIds.length;
     const lessonsCompleted = rows.length;
-    const wordsLearned = rows.reduce((sum, r) => sum + (r.words_learned ?? 0), 0);
-    const secondsSpent = rows.reduce((sum, r) => sum + (r.duration_seconds ?? 0), 0);
-    const scored = rows.filter((r) => typeof r.score === "number");
-    const accuracy = scored.length
-      ? Math.round(scored.reduce((s, r) => s + (r.score ?? 0), 0) / scored.length)
-      : null;
 
-    // Streak: consecutive days with at least one completed lesson, ending today or yesterday.
     const days = new Set(
-      rows.filter((r) => r.completed_at).map((r) => dayKey(new Date(r.completed_at!))),
+      rows.filter((row) => row.completed_at).map((row) => dayKey(new Date(row.completed_at!))),
     );
     let streak = 0;
     const cursor = new Date();
@@ -59,43 +146,29 @@ export const getLearningStats = createServerFn({ method: "GET" })
       cursor.setDate(cursor.getDate() - 1);
     }
 
-    // Last 7 days activity.
     const weeklyActivity: WeekPoint[] = [];
     for (let i = 6; i >= 0; i -= 1) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const key = dayKey(d);
-      const dayRows = rows.filter((r) => r.completed_at && dayKey(new Date(r.completed_at)) === key);
+      const dayRows = rows.filter(
+        (row) => row.completed_at && dayKey(new Date(row.completed_at)) === key,
+      );
       weeklyActivity.push({
         day: DAY_LABELS[(d.getDay() + 6) % 7]!,
-        minutes: Math.round(dayRows.reduce((s, r) => s + (r.duration_seconds ?? 0), 0) / 60),
-        words: dayRows.reduce((s, r) => s + (r.words_learned ?? 0), 0),
+        minutes: 0,
+        words: dayRows.length,
       });
     }
 
-    // Last 4 weeks of new words.
-    const weeklyWords = [3, 2, 1, 0].map((offset) => {
-      const end = new Date();
-      end.setDate(end.getDate() - offset * 7);
-      const start = new Date(end);
-      start.setDate(start.getDate() - 6);
-      const words = rows
-        .filter((r) => {
-          if (!r.completed_at) return false;
-          const t = new Date(r.completed_at).getTime();
-          return t >= start.setHours(0, 0, 0, 0) && t <= end.getTime();
-        })
-        .reduce((s, r) => s + (r.words_learned ?? 0), 0);
-      return { week: `${4 - offset} нед.`, words };
-    });
-
+    const weeklyWords = [3, 2, 1, 0].map((offset) => ({ week: `${4 - offset} нед.`, words: 0 }));
     const activityCalendar: { date: string; level: number }[] = [];
     for (let i = 90; i >= 0; i -= 1) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const key = dayKey(d);
       const count = rows.filter(
-        (r) => r.completed_at && dayKey(new Date(r.completed_at)) === key,
+        (row) => row.completed_at && dayKey(new Date(row.completed_at)) === key,
       ).length;
       activityCalendar.push({ date: key, level: Math.min(count, 4) });
     }
@@ -106,98 +179,172 @@ export const getLearningStats = createServerFn({ method: "GET" })
       courseProgress: lessonsTotal ? Math.round((lessonsCompleted / lessonsTotal) * 100) : 0,
       wordsLearned,
       streak,
-      minutesSpent: Math.round(secondsSpent / 60),
-      accuracy,
-      perfectLessons: rows.filter((r) => r.score === 100).length,
+      minutesSpent: 0,
+      accuracy: null,
+      perfectLessons: 0,
       hasData: lessonsCompleted > 0,
-      completedLessonIds: rows.map((r) => r.lesson_id),
+      completedLessonIds: rows.map((row) => row.lesson_id),
       weeklyActivity,
       weeklyWords,
       activityCalendar,
     };
   });
 
-/** Authenticated + access-checked: protected lesson content never leaves the server without access. */
+/** Authenticated + enrollment-checked: protected lesson blocks never leave the server without access. */
 export const getLessonContent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ lessonId: z.string().min(1) }).parse(input))
-  .handler(async ({ data, context }) => {
-    const { data: allowed, error } = await context.supabase.rpc("current_user_has_course_access");
-    if (error) throw new Error(error.message);
-    if (!allowed) return { allowed: false as const, steps: [] };
+  .inputValidator((input: unknown) => z.object({ lessonId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<LessonContentResult> => {
+    const { data: lesson, error: lessonError } = await context.supabase
+      .from("lessons")
+      .select(
+        "id, course_id, title, description, video_url, position, status, course:courses(id, title, slug, status)",
+      )
+      .eq("id", data.lessonId)
+      .maybeSingle();
+    if (lessonError) throw new Error(lessonError.message);
+    if (
+      !lesson ||
+      lesson.status !== "published" ||
+      !lesson.course ||
+      lesson.course.status !== "published"
+    ) {
+      return { allowed: false, reason: "not_found" };
+    }
 
-    const { getStepsForLesson } = await import("@/content/lessons.server");
-    return { allowed: true as const, steps: getStepsForLesson(data.lessonId) };
+    const { data: enrollment, error: enrollmentError } = await context.supabase
+      .from("enrollments")
+      .select("status, expires_at")
+      .eq("user_id", context.userId)
+      .eq("course_id", lesson.course_id)
+      .eq("status", "active")
+      .maybeSingle();
+    if (enrollmentError) throw new Error(enrollmentError.message);
+    if (!enrollment || !isActiveEnrollment(enrollment))
+      return { allowed: false, reason: "no_access" };
+
+    const { data: blocks, error: blocksError } = await context.supabase
+      .from("lesson_blocks")
+      .select("id, type, content, position")
+      .eq("lesson_id", data.lessonId)
+      .order("position", { ascending: true });
+    if (blocksError) throw new Error(blocksError.message);
+
+    const { data: progress, error: progressError } = await context.supabase
+      .from("lesson_progress")
+      .select("progress, completed")
+      .eq("user_id", context.userId)
+      .eq("lesson_id", data.lessonId)
+      .maybeSingle();
+    if (progressError) throw new Error(progressError.message);
+
+    return {
+      allowed: true,
+      lesson: {
+        id: lesson.id,
+        courseId: lesson.course_id,
+        title: lesson.title,
+        description: lesson.description,
+        position: lesson.position,
+        videoUrl: lesson.video_url,
+      },
+      course: {
+        id: lesson.course.id,
+        title: lesson.course.title,
+        slug: lesson.course.slug,
+      },
+      blocks: (
+        (blocks ?? []) as {
+          id: string;
+          type: LessonBlock["type"];
+          content: Json;
+          position: number;
+        }[]
+      ).map((block) => ({
+        id: block.id,
+        type: block.type,
+        content: contentObject(block.content),
+        position: block.position,
+      })),
+      progress: progress?.progress ?? 0,
+      completed: Boolean(progress?.completed),
+    };
   });
 
-/** Authenticated + access-checked: records a real completion. */
+/** Authenticated + enrollment-checked: records progress visible to HunMaster Admin. */
 export const completeLesson = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
-        lessonId: z.string().min(1).max(64),
-        correct: z.number().int().min(0).max(500),
-        total: z.number().int().min(1).max(500),
-        durationSeconds: z.number().int().min(0).max(60 * 60 * 4),
+        lessonId: z.string().uuid(),
+        progress: z.number().int().min(0).max(100),
+        completed: z.boolean().default(false),
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { data: allowed, error: accessError } = await context.supabase.rpc(
-      "current_user_has_course_access",
-    );
-    if (accessError) throw new Error(accessError.message);
-    if (!allowed) return { ok: false as const, reason: "no_access" as const };
-
-    const { a1LessonIds } = await import("@/data/hunmaster");
-    if (!a1LessonIds.includes(data.lessonId)) return { ok: false as const, reason: "unknown_lesson" as const };
-
-    const { countWordSteps } = await import("@/content/lessons.server");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: course } = await supabaseAdmin
-      .from("courses")
-      .select("id")
-      .eq("slug", "a1")
+    const { data: lesson, error: lessonError } = await context.supabase
+      .from("lessons")
+      .select("id, course_id, status")
+      .eq("id", data.lessonId)
+      .eq("status", "published")
       .maybeSingle();
+    if (lessonError) throw new Error(lessonError.message);
+    if (!lesson) return { ok: false as const, reason: "unknown_lesson" as const };
 
-    const score = Math.max(0, Math.min(100, Math.round((data.correct / data.total) * 100)));
+    const { data: enrollment, error: enrollmentError } = await context.supabase
+      .from("enrollments")
+      .select("status, expires_at")
+      .eq("user_id", context.userId)
+      .eq("course_id", lesson.course_id)
+      .eq("status", "active")
+      .maybeSingle();
+    if (enrollmentError) throw new Error(enrollmentError.message);
+    if (!enrollment || !isActiveEnrollment(enrollment)) {
+      return { ok: false as const, reason: "no_access" as const };
+    }
 
-    const { error: upsertError } = await supabaseAdmin.from("lesson_progress").upsert(
+    const now = new Date().toISOString();
+    const completed = data.completed || data.progress === 100;
+    const { error: upsertError } = await context.supabase.from("lesson_progress").upsert(
       {
         user_id: context.userId,
-        course_id: course?.id ?? null,
         lesson_id: data.lessonId,
-        completed: true,
-        score,
-        words_learned: countWordSteps(data.lessonId),
-        duration_seconds: data.durationSeconds,
-        completed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        progress: completed ? 100 : data.progress,
+        completed,
+        completed_at: completed ? now : null,
+        updated_at: now,
       },
       { onConflict: "user_id,lesson_id" },
     );
     if (upsertError) throw new Error(upsertError.message);
 
-    if (course?.id) {
-      const { count } = await supabaseAdmin
-        .from("lesson_progress")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", context.userId)
-        .eq("completed", true);
-      const completed = count ?? 0;
-      await supabaseAdmin.from("course_progress").upsert(
-        {
-          user_id: context.userId,
-          course_id: course.id,
-          lessons_completed: completed,
-          progress_percent: Math.round((completed / a1LessonIds.length) * 100),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,course_id" },
-      );
-    }
-
-    return { ok: true as const, score };
+    return { ok: true as const, progress: completed ? 100 : data.progress, completed };
   });
+
+function emptyStats(): LearningStats {
+  const weeklyActivity = DAY_LABELS.map((day) => ({ day, minutes: 0, words: 0 }));
+  const weeklyWords = [1, 2, 3, 4].map((week) => ({ week: `${week} нед.`, words: 0 }));
+  const activityCalendar = Array.from({ length: 91 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (90 - i));
+    return { date: dayKey(d), level: 0 };
+  });
+
+  return {
+    lessonsCompleted: 0,
+    lessonsTotal: 0,
+    courseProgress: 0,
+    wordsLearned: 0,
+    streak: 0,
+    minutesSpent: 0,
+    accuracy: null,
+    perfectLessons: 0,
+    hasData: false,
+    completedLessonIds: [],
+    weeklyActivity,
+    weeklyWords,
+    activityCalendar,
+  };
+}

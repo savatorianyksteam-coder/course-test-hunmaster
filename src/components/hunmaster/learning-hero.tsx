@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ArrowRight, BookOpen, Flame, Layers, Sparkles, Target } from "lucide-react";
 import { useEffect, useState } from "react";
-import { currentLesson } from "@/data/hunmaster";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearningStats } from "@/hooks/useLearningStats";
 import { AnimatedCounter } from "./animated-counter";
@@ -10,7 +9,14 @@ import { GlassPanel } from "./glass-panel";
 import { MagneticButton } from "./magnetic-button";
 import { WeeklyActivityChart } from "./charts";
 
-export function LearningHero() {
+type HeroCourse = {
+  id: string;
+  code: string;
+  title: string;
+  progress: number;
+};
+
+export function LearningHero({ course }: { course?: HeroCourse | null }) {
   const { profile } = useAuth();
   const { data } = useLearningStats();
   const learningStats = {
@@ -34,7 +40,7 @@ export function LearningHero() {
   }, [learningStats.courseProgress]);
 
   const stats = [
-    { icon: Target, label: "Уровень", value: "A1" },
+    { icon: Target, label: "Уровень", value: course?.code ?? "—" },
     { icon: Flame, label: "Серия", value: `${learningStats.streak} дней` },
     { icon: BookOpen, label: "Изучено слов", value: learningStats.wordsLearned },
     {
@@ -66,7 +72,7 @@ export function LearningHero() {
             HunMaster Learn · закрытая платформа
           </span>
           <h1 className="mt-6 text-4xl leading-[1.05] font-bold sm:text-6xl">
-            С возвращением, <span className="text-gradient">{profile?.name ?? "ученик"}</span>
+            С возвращением, <span className="text-gradient">{profile?.full_name ?? "ученик"}</span>
           </h1>
           <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             Продолжим изучать венгерский?
@@ -74,20 +80,24 @@ export function LearningHero() {
 
           <div className="mt-8">
             <MagneticButton asChild size="lg" className="glow-edge rounded-full px-8">
-              <Link to="/lesson/$lessonId" params={{ lessonId: currentLesson.id }}>
-                Продолжить обучение <ArrowRight className="ml-1 size-4" />
-              </Link>
+              {course ? (
+                <Link to="/courses/$courseId" params={{ courseId: course.id }}>
+                  Продолжить обучение <ArrowRight className="ml-1 size-4" />
+                </Link>
+              ) : (
+                <Link to="/courses">
+                  Продолжить обучение <ArrowRight className="ml-1 size-4" />
+                </Link>
+              )}
             </MagneticButton>
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{currentLesson.courseTitle}</span>
-            <span className="opacity-40">/</span>
-            <span>{currentLesson.module}</span>
-            <span className="opacity-40">/</span>
-            <span>
-              Урок {currentLesson.number} — {currentLesson.title}
+            <span className="font-semibold text-foreground">
+              {course?.title ?? "Курс пока не открыт"}
             </span>
+            <span className="opacity-40">/</span>
+            <span>Доступы синхронизируются с HunMaster Admin</span>
           </div>
         </motion.div>
 
@@ -100,7 +110,9 @@ export function LearningHero() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-muted-foreground">Learning overview</div>
-                <div className="font-display text-2xl font-bold">Венгерский A1</div>
+                <div className="font-display text-2xl font-bold">
+                  {course?.title ?? "Нет активного курса"}
+                </div>
               </div>
               <div className="flex items-center gap-1.5 rounded-full bg-primary/12 px-3 py-1.5 text-xs font-medium text-primary">
                 <Flame className="size-3.5" /> {learningStats.streak} дней подряд

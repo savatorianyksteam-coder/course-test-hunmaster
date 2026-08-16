@@ -72,12 +72,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ready,
       profileLoading: Boolean(userId) && profileQuery.isPending,
       accessStatus,
-      hasAccess: accessStatus === "active",
-      isAdmin: profile?.role === "admin",
+      hasAccess: accessStatus !== "blocked",
+      isAdmin: profile?.role === "admin" || profile?.role === "owner",
       refreshProfile,
       signOut,
     }),
-    [session, profile, ready, userId, profileQuery.isPending, accessStatus, refreshProfile, signOut],
+    [
+      session,
+      profile,
+      ready,
+      userId,
+      profileQuery.isPending,
+      accessStatus,
+      refreshProfile,
+      signOut,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -88,9 +88,11 @@ export function AppHeader() {
                     className="flex items-center gap-2 rounded-full border border-border/70 py-1 pr-3 pl-1 transition-colors hover:bg-secondary/60"
                   >
                     <span className="grid size-7 place-items-center rounded-full bg-[image:var(--gradient-brand)] font-display text-xs font-bold text-primary-foreground">
-                      {(profile?.name ?? "?").slice(0, 1)}
+                      {(profile?.full_name ?? profile?.email ?? "?").slice(0, 1)}
                     </span>
-                    <span className="hidden text-sm font-medium sm:inline">{profile?.name}</span>
+                    <span className="hidden text-sm font-medium sm:inline">
+                      {profile?.full_name ?? profile?.email}
+                    </span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52 rounded-2xl">
@@ -105,9 +107,7 @@ export function AppHeader() {
                     <Settings className="mr-2 size-4" /> Настройки
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => void signOut()}
-                  >
+                  <DropdownMenuItem onClick={() => void signOut()}>
                     <LogOut className="mr-2 size-4" /> Выйти
                   </DropdownMenuItem>
                 </DropdownMenuContent>

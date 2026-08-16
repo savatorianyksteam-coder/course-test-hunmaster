@@ -5,7 +5,8 @@ import { GlassPanel } from "@/components/hunmaster/glass-panel";
 import { PageShell, Stagger, StaggerItem } from "@/components/hunmaster/page-shell";
 import { AnimatedCounter } from "@/components/hunmaster/animated-counter";
 import { AccuracyChart, WeeklyActivityChart, WordsChart } from "@/components/hunmaster/charts";
-import { activityCalendar, learningStats, skillProgress } from "@/data/hunmaster";
+import { skillProgress } from "@/data/hunmaster";
+import { useLearningStats } from "@/hooks/useLearningStats";
 
 export const Route = createFileRoute("/_authenticated/progress")({
   head: () => ({
@@ -23,12 +24,17 @@ export const Route = createFileRoute("/_authenticated/progress")({
 });
 
 function ProgressPage() {
+  const { data } = useLearningStats();
   const cards = [
-    { icon: Layers, label: "Прогресс курса", value: `${learningStats.courseProgress}%` },
-    { icon: BookOpen, label: "Изучено слов", value: learningStats.wordsLearned },
-    { icon: Target, label: "Уроков", value: learningStats.lessonsDone },
-    { icon: Flame, label: "Серия", value: `${learningStats.streak} дней` },
-    { icon: Clock, label: "Время обучения", value: learningStats.timeSpent },
+    { icon: Layers, label: "Прогресс курса", value: `${data?.courseProgress ?? 0}%` },
+    { icon: BookOpen, label: "Изучено слов", value: data?.wordsLearned ?? 0 },
+    { icon: Target, label: "Уроков", value: data?.lessonsCompleted ?? 0 },
+    { icon: Flame, label: "Серия", value: `${data?.streak ?? 0} дней` },
+    {
+      icon: Clock,
+      label: "Время обучения",
+      value: `${Math.round((data?.minutesSpent ?? 0) / 60)} ч`,
+    },
   ];
 
   return (
@@ -55,7 +61,7 @@ function ProgressPage() {
               <GlassPanel className="h-full p-6">
                 <h2 className="font-display text-lg font-bold">Активность за неделю</h2>
                 <div className="-mx-2 mt-3">
-                  <WeeklyActivityChart />
+                  <WeeklyActivityChart data={data?.weeklyActivity} />
                 </div>
               </GlassPanel>
             </StaggerItem>
@@ -63,7 +69,7 @@ function ProgressPage() {
               <GlassPanel className="h-full p-6">
                 <h2 className="font-display text-lg font-bold">Точность</h2>
                 <div className="mt-3">
-                  <AccuracyChart />
+                  <AccuracyChart accuracy={data?.accuracy} />
                 </div>
               </GlassPanel>
             </StaggerItem>
@@ -74,7 +80,7 @@ function ProgressPage() {
               <GlassPanel className="h-full p-6">
                 <h2 className="font-display text-lg font-bold">Новые слова по неделям</h2>
                 <div className="-mx-2 mt-3">
-                  <WordsChart />
+                  <WordsChart data={data?.weeklyWords} />
                 </div>
               </GlassPanel>
             </StaggerItem>
@@ -105,9 +111,9 @@ function ProgressPage() {
             <GlassPanel className="p-6">
               <h2 className="font-display text-lg font-bold">Календарь занятий</h2>
               <div className="mt-4 grid grid-flow-col grid-rows-7 gap-1.5 overflow-x-auto">
-                {activityCalendar.map((d) => (
+                {(data?.activityCalendar ?? []).map((d) => (
                   <span
-                    key={d.day}
+                    key={d.date}
                     title={`Уровень активности: ${d.level}`}
                     className="size-3.5 rounded-[5px] bg-primary"
                     style={{ opacity: 0.12 + d.level * 0.2 }}

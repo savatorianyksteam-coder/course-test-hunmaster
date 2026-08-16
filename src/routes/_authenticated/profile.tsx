@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { GlassPanel } from "@/components/hunmaster/glass-panel";
@@ -17,7 +17,10 @@ export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
       { title: "Профиль ученика — HunMaster Learn" },
-      { name: "description", content: "Профиль, статус доступа и учебная статистика в HunMaster Learn." },
+      {
+        name: "description",
+        content: "Профиль, статус доступа и учебная статистика в HunMaster Learn.",
+      },
       { property: "og:title", content: "Профиль ученика — HunMaster Learn" },
       { property: "og:description", content: "Данные аккаунта и статус доступа к курсам." },
     ],
@@ -26,14 +29,20 @@ export const Route = createFileRoute("/_authenticated/profile")({
 });
 
 const fmt = (v: string | null) =>
-  v ? new Date(v).toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" }) : "—";
+  v
+    ? new Date(v).toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" })
+    : "—";
 
 function ProfilePage() {
   const { profile, accessStatus, refreshProfile } = useAuth();
   const { data: stats } = useLearningStats();
   const signOut = useSignOut();
   const queryClient = useQueryClient();
-  const [name, setName] = useState(profile?.name ?? "");
+  const [name, setName] = useState(profile?.full_name ?? "");
+
+  useEffect(() => {
+    setName(profile?.full_name ?? "");
+  }, [profile?.full_name]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -54,19 +63,19 @@ function ProfilePage() {
         <GlassPanel className="p-6 sm:p-8">
           <div className="flex items-center gap-4">
             <span className="grid size-14 place-items-center rounded-2xl bg-[image:var(--gradient-brand)] font-display text-lg font-bold text-primary-foreground">
-              {(profile?.name ?? "?").slice(0, 1)}
+              {(profile?.full_name ?? profile?.email ?? "?").slice(0, 1)}
             </span>
             <div>
-              <div className="font-display text-xl font-bold">{profile?.name ?? "—"}</div>
+              <div className="font-display text-xl font-bold">{profile?.full_name ?? "—"}</div>
               <div className="text-sm text-muted-foreground">@{profile?.username ?? "—"}</div>
             </div>
           </div>
           <dl className="mt-6 space-y-3 text-sm">
             {[
               ["Роль", profile?.role === "admin" ? "Администратор" : "Ученик"],
+              ["Email", profile?.email ?? "—"],
               ["Аккаунт создан", fmt(profile?.created_at ?? null)],
-              ["Доступ с", fmt(profile?.access_started_at ?? null)],
-              ["Доступ до", profile?.access_expires_at ? fmt(profile.access_expires_at) : "Бессрочно"],
+              ["Статус аккаунта", profile?.account_status ?? "—"],
               ["Время обучения", `${Math.round((stats?.minutesSpent ?? 0) / 60)} ч`],
               ["Пройдено уроков", `${stats?.lessonsCompleted ?? 0} из ${stats?.lessonsTotal ?? 0}`],
             ].map(([k, v]) => (

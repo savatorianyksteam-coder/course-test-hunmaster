@@ -14,7 +14,10 @@ export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
       { title: "Регистрация — HunMaster Learn" },
-      { name: "description", content: "Создайте аккаунт HunMaster Learn: имя, логин и пароль." },
+      {
+        name: "description",
+        content: "Создайте аккаунт HunMaster Learn: имя, логин, Email и пароль.",
+      },
       { property: "og:title", content: "Регистрация — HunMaster Learn" },
       { property: "og:description", content: "Создайте аккаунт и активируйте доступ к курсу." },
     ],
@@ -25,7 +28,7 @@ export const Route = createFileRoute("/register")({
 function RegisterPage() {
   const navigate = useNavigate();
   const register = useServerFn(registerAccount);
-  const [form, setForm] = useState({ name: "", username: "", password: "", repeat: "" });
+  const [form, setForm] = useState({ name: "", username: "", email: "", password: "", repeat: "" });
   const [busy, setBusy] = useState(false);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -50,7 +53,12 @@ function RegisterPage() {
             setBusy(true);
             try {
               const res = await register({
-                data: { name: form.name, username: form.username, password: form.password },
+                data: {
+                  name: form.name,
+                  username: form.username,
+                  email: form.email,
+                  password: form.password,
+                },
               });
               if (!res.ok) {
                 toast.error(res.message);
@@ -77,8 +85,14 @@ function RegisterPage() {
           {[
             { id: "name", label: "Имя", type: "text", autoComplete: "name" },
             { id: "username", label: "Логин", type: "text", autoComplete: "username" },
+            { id: "email", label: "Email", type: "email", autoComplete: "email" },
             { id: "password", label: "Пароль", type: "password", autoComplete: "new-password" },
-            { id: "repeat", label: "Повторить пароль", type: "password", autoComplete: "new-password" },
+            {
+              id: "repeat",
+              label: "Повторить пароль",
+              type: "password",
+              autoComplete: "new-password",
+            },
           ].map((f) => (
             <div key={f.id} className="space-y-2">
               <Label htmlFor={f.id}>{f.label}</Label>

@@ -21,7 +21,14 @@ export const Route = createFileRoute("/_authenticated/achievements")({
   component: AchievementsPage,
 });
 
-const icons = { award: Award, flame: Flame, star: Star, trophy: Trophy, book: BookOpen, target: Target };
+const icons = {
+  award: Award,
+  flame: Flame,
+  star: Star,
+  trophy: Trophy,
+  book: BookOpen,
+  target: Target,
+};
 
 function AchievementsPage() {
   const { data } = useLearningStats();

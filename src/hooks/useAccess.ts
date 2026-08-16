@@ -6,7 +6,7 @@ export function useAccess() {
     status: accessStatus,
     hasAccess,
     loading: profileLoading,
-    startedAt: profile?.access_started_at ?? null,
-    expiresAt: profile?.access_expires_at ?? null,
+    startedAt: profile?.created_at ?? null,
+    expiresAt: null,
   };
 }

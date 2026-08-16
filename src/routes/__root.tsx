@@ -85,21 +85,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "HunMaster Learn — платформа изучения венгерского" },
       {
         name: "description",
-        content: "Закрытая учебная платформа HunMaster Learn: курсы венгерского языка, уроки, словарь и прогресс.",
+        content:
+          "Закрытая учебная платформа HunMaster Learn: курсы венгерского языка, уроки, словарь и прогресс.",
       },
       { name: "author", content: "HunMaster" },
       { property: "og:title", content: "HunMaster Learn — платформа изучения венгерского" },
       {
         property: "og:description",
-        content: "Закрытая учебная платформа HunMaster Learn: курсы венгерского языка, уроки, словарь и прогресс.",
+        content:
+          "Закрытая учебная платформа HunMaster Learn: курсы венгерского языка, уроки, словарь и прогресс.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "HunMaster Learn — платформа изучения венгерского" },
-      { name: "twitter:description", content: "Закрытая учебная платформа HunMaster Learn: курсы венгерского языка, уроки, словарь и прогресс." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a2680a11-9a3d-4f7b-bc5d-a8cc8dfd4874/id-preview-81c65741--d0f13c24-1a2c-442f-afe0-d10ead806ded.lovable.app-1785845072690.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a2680a11-9a3d-4f7b-bc5d-a8cc8dfd4874/id-preview-81c65741--d0f13c24-1a2c-442f-afe0-d10ead806ded.lovable.app-1785845072690.png" },
+      {
+        name: "twitter:description",
+        content:
+          "Закрытая учебная платформа HunMaster Learn: курсы венгерского языка, уроки, словарь и прогресс.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a2680a11-9a3d-4f7b-bc5d-a8cc8dfd4874/id-preview-81c65741--d0f13c24-1a2c-442f-afe0-d10ead806ded.lovable.app-1785845072690.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a2680a11-9a3d-4f7b-bc5d-a8cc8dfd4874/id-preview-81c65741--d0f13c24-1a2c-442f-afe0-d10ead806ded.lovable.app-1785845072690.png",
+      },
     ],
     links: [
       {
@@ -143,11 +157,11 @@ function RootComponent() {
       <ThemeProvider>
         <AuthProvider>
           <AppHeader />
-        <main className="min-h-screen">
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-        </main>
-        <AppFooter />
+          <main className="min-h-screen">
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+          </main>
+          <AppFooter />
           <Toaster />
         </AuthProvider>
       </ThemeProvider>

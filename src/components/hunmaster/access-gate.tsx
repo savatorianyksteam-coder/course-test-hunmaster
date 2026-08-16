@@ -13,7 +13,7 @@ const icons = {
   blocked: Lock,
 };
 
-/** Renders children only when demo access is active; otherwise shows a status screen. */
+/** Renders children for signed-in students unless the shared profile is blocked. */
 export function AccessGate({ children }: { children: ReactNode }) {
   const { accessStatus, profileLoading } = useAuth();
   if (profileLoading) {
@@ -23,7 +23,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
       </GlassPanel>
     );
   }
-  if (accessStatus === "active") return <>{children}</>;
+  if (accessStatus !== "blocked") return <>{children}</>;
 
   const copy = accessCopy[accessStatus];
   const Icon = icons[accessStatus];

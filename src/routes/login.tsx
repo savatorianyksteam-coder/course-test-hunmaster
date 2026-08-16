@@ -7,14 +7,17 @@ import { BrandMark } from "@/components/hunmaster/brand-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { loginWithUsername } from "@/services/auth.functions";
+import { loginWithIdentifier } from "@/services/auth.functions";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "Вход — HunMaster Learn" },
-      { name: "description", content: "Вход в закрытую учебную платформу HunMaster Learn по логину и паролю." },
+      {
+        name: "description",
+        content: "Вход в закрытую учебную платформу HunMaster Learn по Email или логину.",
+      },
       { property: "og:title", content: "Вход — HunMaster Learn" },
       { property: "og:description", content: "Войдите, чтобы продолжить обучение венгерскому." },
     ],
@@ -24,8 +27,8 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const login = useServerFn(loginWithUsername);
-  const [username, setUsername] = useState("");
+  const login = useServerFn(loginWithIdentifier);
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -35,7 +38,7 @@ function LoginPage() {
         <BrandMark />
         <h1 className="mt-6 font-display text-2xl font-bold">Вход</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Войдите по логину и паролю, чтобы продолжить обучение.
+          Войдите по Email или логину, чтобы продолжить обучение.
         </p>
         <form
           className="mt-7 space-y-4"
@@ -43,7 +46,7 @@ function LoginPage() {
             e.preventDefault();
             setBusy(true);
             try {
-              const res = await login({ data: { username, password } });
+              const res = await login({ data: { identifier, password } });
               if (!res.ok) {
                 toast.error(res.message);
                 return;
@@ -66,12 +69,12 @@ function LoginPage() {
           }}
         >
           <div className="space-y-2">
-            <Label htmlFor="username">Логин</Label>
+            <Label htmlFor="identifier">Email или логин</Label>
             <Input
-              id="username"
+              id="identifier"
               autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               className="h-12 rounded-2xl"
               required
             />

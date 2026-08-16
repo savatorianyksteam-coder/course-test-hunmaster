@@ -1,18 +1,26 @@
-// SERVER ONLY. Maps a public username to the internal auth identifier used by
-// the auth system. The internal identifier is never exposed to the browser.
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-const INTERNAL_DOMAIN = "users.hunmaster.internal";
+function supabaseUrl() {
+  return process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"];
+}
 
-export function usernameToInternalEmail(username: string): string {
-  return `${username.trim().toLowerCase()}@${INTERNAL_DOMAIN}`;
+function supabaseAnonKey() {
+  return (
+    process.env["SUPABASE_ANON_KEY"] ||
+    process.env["VITE_SUPABASE_ANON_KEY"] ||
+    process.env["SUPABASE_PUBLISHABLE_KEY"] ||
+    process.env["VITE_SUPABASE_PUBLISHABLE_KEY"]
+  );
 }
 
 /** Publishable-key client used server-side for password grants (no session persistence). */
 export function createServerAuthClient() {
-  const url = process.env["SUPABASE_URL"]!;
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
+  const url = supabaseUrl();
+  const key = supabaseAnonKey();
+  if (!url || !key) {
+    throw new Error("Missing Supabase URL or anon key for server auth");
+  }
   return createClient<Database>(url, key, {
     auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
     global: {

@@ -34,7 +34,7 @@ export function WeeklyActivityChart({
   data,
 }: {
   height?: number;
-  data?: Point[];
+  data?: Point[] | undefined;
 }) {
   const weeklyActivity = data?.length ? data : emptyWeek;
   return (
@@ -47,7 +47,13 @@ export function WeeklyActivityChart({
           </linearGradient>
         </defs>
         <CartesianGrid vertical={false} stroke="var(--border)" />
-        <XAxis dataKey="day" tickLine={false} axisLine={false} fontSize={12} stroke="var(--muted-foreground)" />
+        <XAxis
+          dataKey="day"
+          tickLine={false}
+          axisLine={false}
+          fontSize={12}
+          stroke="var(--muted-foreground)"
+        />
         <YAxis tickLine={false} axisLine={false} fontSize={12} stroke="var(--muted-foreground)" />
         <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v} мин`, "Занятия"]} />
         <Area
@@ -63,22 +69,37 @@ export function WeeklyActivityChart({
   );
 }
 
-export function WordsChart({ data }: { data?: { week: string; words: number }[] }) {
+export function WordsChart({ data }: { data?: { week: string; words: number }[] | undefined }) {
   const weeklyWords = data?.length ? data : emptyWords;
   return (
     <ResponsiveContainer width="100%" height={200}>
       <BarChart data={weeklyWords} margin={{ top: 10, right: 8, left: -22, bottom: 0 }}>
         <CartesianGrid vertical={false} stroke="var(--border)" />
-        <XAxis dataKey="week" tickLine={false} axisLine={false} fontSize={12} stroke="var(--muted-foreground)" />
+        <XAxis
+          dataKey="week"
+          tickLine={false}
+          axisLine={false}
+          fontSize={12}
+          stroke="var(--muted-foreground)"
+        />
         <YAxis tickLine={false} axisLine={false} fontSize={12} stroke="var(--muted-foreground)" />
-        <Tooltip cursor={{ fill: "var(--secondary)" }} contentStyle={tooltipStyle} formatter={(v) => [`${v} слов`, "Выучено"]} />
-        <Bar dataKey="words" radius={[10, 10, 4, 4]} fill="var(--brand-green)" animationDuration={1200} />
+        <Tooltip
+          cursor={{ fill: "var(--secondary)" }}
+          contentStyle={tooltipStyle}
+          formatter={(v) => [`${v} слов`, "Выучено"]}
+        />
+        <Bar
+          dataKey="words"
+          radius={[10, 10, 4, 4]}
+          fill="var(--brand-green)"
+          animationDuration={1200}
+        />
       </BarChart>
     </ResponsiveContainer>
   );
 }
 
-export function AccuracyChart({ accuracy }: { accuracy?: number | null }) {
+export function AccuracyChart({ accuracy }: { accuracy?: number | null | undefined }) {
   const value = accuracy ?? 0;
   const accuracyData = [
     { name: "Верно", value },
@@ -107,7 +128,9 @@ export function AccuracyChart({ accuracy }: { accuracy?: number | null }) {
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 grid place-items-center">
         <div className="text-center">
-          <div className="font-display text-2xl font-bold">{accuracy === null || accuracy === undefined ? "—" : `${value}%`}</div>
+          <div className="font-display text-2xl font-bold">
+            {accuracy === null || accuracy === undefined ? "—" : `${value}%`}
+          </div>
           <div className="text-xs text-muted-foreground">точность</div>
         </div>
       </div>
