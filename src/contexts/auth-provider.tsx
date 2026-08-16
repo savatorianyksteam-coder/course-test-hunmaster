@@ -22,21 +22,59 @@ export type AuthValue = {
 
 export const AuthContext = createContext<AuthValue | null>(null);
 
+function logAuthInitializationError(error: unknown) {
+  const detail =
+    error instanceof Error
+      ? { name: error.name, message: error.message, stack: error.stack }
+      : { message: String(error) };
+  console.error("[Auth] Failed to initialize Supabase session", detail);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
-      setSession(next);
+    let mounted = true;
+    let unsubscribe: (() => void) | undefined;
+
+    const finishAsAnonymous = (error: unknown) => {
+      logAuthInitializationError(error);
+      if (!mounted) return;
+      setSession(null);
       setReady(true);
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setReady(true);
-    });
-    return () => sub.subscription.unsubscribe();
+    };
+
+    try {
+      const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+        if (!mounted) return;
+        setSession(next);
+        setReady(true);
+      });
+      unsubscribe = () => sub.subscription.unsubscribe();
+    } catch (error) {
+      finishAsAnonymous(error);
+      return () => {
+        mounted = false;
+        unsubscribe?.();
+      };
+    }
+
+    supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (error) throw error;
+        if (!mounted) return;
+        setSession(data.session);
+        setReady(true);
+      })
+      .catch(finishAsAnonymous);
+
+    return () => {
+      mounted = false;
+      unsubscribe?.();
+    };
   }, []);
 
   const userId = session?.user.id ?? null;

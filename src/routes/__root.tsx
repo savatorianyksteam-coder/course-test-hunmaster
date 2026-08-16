@@ -40,10 +40,18 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
+  console.error("[RootError]", {
+    name: error.name,
+    message: error.message,
+    stack: error.stack,
+  });
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    try {
+      reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    } catch (reportError) {
+      console.error("[RootError] Failed to report error", reportError);
+    }
   }, [error]);
 
   return (
