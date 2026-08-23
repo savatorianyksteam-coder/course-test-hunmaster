@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Search, Volume2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AccessGate } from "@/components/hunmaster/access-gate";
 import { GlassPanel } from "@/components/hunmaster/glass-panel";
 import { PageShell, Stagger, StaggerItem } from "@/components/hunmaster/page-shell";
 import { Input } from "@/components/ui/input";
-import { dictionary, dictionaryCategories } from "@/data/hunmaster";
+import { useAuth } from "@/hooks/useAuth";
+import { getDictionary } from "@/services/dictionary.functions";
+import { dictionaryCategories } from "@/services/dictionary.types";
 
 export const Route = createFileRoute("/_authenticated/dictionary")({
   head: () => ({
@@ -31,16 +35,24 @@ const statusLabel = {
 function DictionaryPage() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("Все");
-
+  const { user } = useAuth();
+  const fetchDictionary = useServerFn(getDictionary);
+  const dictionaryQuery = useQuery({
+    queryKey: ["paid-dictionary", user?.id],
+    queryFn: () => fetchDictionary(),
+    enabled: Boolean(user?.id),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
   const items = useMemo(
     () =>
-      dictionary.filter(
+      (dictionaryQuery.data?.items ?? []).filter(
         (d) =>
           (cat === "Все" || d.category === cat) &&
           (d.hu.toLowerCase().includes(q.toLowerCase()) ||
             d.ru.toLowerCase().includes(q.toLowerCase())),
       ),
-    [q, cat],
+    [dictionaryQuery.data?.items, q, cat],
   );
 
   return (
@@ -49,60 +61,74 @@ function DictionaryPage() {
       title="Словарь"
       description="Слова, которые встречались в уроках, с переводом и статусом изучения."
     >
-      <AccessGate>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-56 flex-1">
-            <Search className="absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Поиск слова"
-              className="h-12 rounded-2xl pl-11"
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {dictionaryCategories.map((c) => (
-              <button
-                key={c}
-                onClick={() => setCat(c)}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                  cat === c
-                    ? "border-primary/50 bg-primary/12 text-primary"
-                    : "border-border/60 text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <Stagger className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((d) => (
-            <StaggerItem key={d.hu}>
-              <GlassPanel className="flex h-full items-start justify-between gap-3 p-5">
-                <div>
-                  <div className="font-display text-lg font-bold">{d.hu}</div>
-                  <div className="text-xs text-muted-foreground">{d.transcription}</div>
-                  <div className="mt-2 text-sm">{d.ru}</div>
-                  <span
-                    className={`mt-3 inline-block rounded-full px-3 py-1 text-[0.7rem] font-medium ${statusLabel[d.status].cls}`}
+      <AccessGate
+        access={dictionaryQuery.data?.access}
+        loading={dictionaryQuery.isPending}
+        title="Словарь доступен после активации курса"
+        description="Активируйте платный курс HunMaster, чтобы открыть слова, переводы и учебный прогресс."
+      >
+        {dictionaryQuery.isError && (
+          <GlassPanel className="p-8 text-center text-sm text-muted-foreground">
+            Не удалось проверить доступ к словарю. Попробуйте обновить страницу.
+          </GlassPanel>
+        )}
+        {!dictionaryQuery.isError && (
+          <>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative min-w-56 flex-1">
+                <Search className="absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Поиск слова"
+                  className="h-12 rounded-2xl pl-11"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {dictionaryCategories.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCat(c)}
+                    className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                      cat === c
+                        ? "border-primary/50 bg-primary/12 text-primary"
+                        : "border-border/60 text-muted-foreground hover:text-foreground"
+                    }`}
                   >
-                    {statusLabel[d.status].text}
-                  </span>
-                </div>
-                <button
-                  aria-label={`Прослушать ${d.hu}`}
-                  className="grid size-9 shrink-0 place-items-center rounded-full border border-border/70 text-muted-foreground transition-colors hover:text-primary"
-                >
-                  <Volume2 className="size-4" />
-                </button>
-              </GlassPanel>
-            </StaggerItem>
-          ))}
-        </Stagger>
-        {items.length === 0 && (
-          <p className="mt-10 text-center text-sm text-muted-foreground">Ничего не найдено.</p>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Stagger className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((d) => (
+                <StaggerItem key={d.hu}>
+                  <GlassPanel className="flex h-full items-start justify-between gap-3 p-5">
+                    <div>
+                      <div className="font-display text-lg font-bold">{d.hu}</div>
+                      <div className="text-xs text-muted-foreground">{d.transcription}</div>
+                      <div className="mt-2 text-sm">{d.ru}</div>
+                      <span
+                        className={`mt-3 inline-block rounded-full px-3 py-1 text-[0.7rem] font-medium ${statusLabel[d.status].cls}`}
+                      >
+                        {statusLabel[d.status].text}
+                      </span>
+                    </div>
+                    <button
+                      aria-label={`Прослушать ${d.hu}`}
+                      className="grid size-9 shrink-0 place-items-center rounded-full border border-border/70 text-muted-foreground transition-colors hover:text-primary"
+                    >
+                      <Volume2 className="size-4" />
+                    </button>
+                  </GlassPanel>
+                </StaggerItem>
+              ))}
+            </Stagger>
+            {items.length === 0 && (
+              <p className="mt-10 text-center text-sm text-muted-foreground">Ничего не найдено.</p>
+            )}
+          </>
         )}
       </AccessGate>
     </PageShell>

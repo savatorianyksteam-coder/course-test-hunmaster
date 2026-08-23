@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { GlassPanel } from "@/components/hunmaster/glass-panel";
@@ -30,6 +30,7 @@ function RegisterPage() {
   const register = useServerFn(registerAccount);
   const [form, setForm] = useState({ name: "", username: "", email: "", password: "", repeat: "" });
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [k]: e.target.value });
@@ -44,12 +45,15 @@ function RegisterPage() {
         </p>
         <form
           className="mt-7 space-y-4"
+          aria-busy={busy}
           onSubmit={async (e) => {
             e.preventDefault();
+            if (busyRef.current) return;
             if (form.password !== form.repeat) {
               toast.error("Пароли не совпадают");
               return;
             }
+            busyRef.current = true;
             setBusy(true);
             try {
               const res = await register({
@@ -78,6 +82,7 @@ function RegisterPage() {
             } catch {
               toast.error("Не удалось создать аккаунт. Попробуйте ещё раз.");
             } finally {
+              busyRef.current = false;
               setBusy(false);
             }
           }}

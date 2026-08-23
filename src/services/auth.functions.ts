@@ -180,15 +180,21 @@ export const registerAccount = createServerFn({ method: "POST" })
     }
 
     try {
+      const startedAt = Date.now();
       const { email, name, password, username } = parsed.data;
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { createServerAuthClient } = await import("./internal-auth.server");
+      const [{ supabaseAdmin }, { createServerAuthClient }] = await Promise.all([
+        import("@/integrations/supabase/client.server"),
+        import("./internal-auth.server"),
+      ]);
 
-      const { data: existingUsername, error: usernameLookupError } = await supabaseAdmin
-        .from("profiles")
-        .select("id")
-        .ilike("username", username)
-        .maybeSingle();
+      const precheckStartedAt = Date.now();
+      const [usernameLookup, emailLookup] = await Promise.all([
+        supabaseAdmin.from("profiles").select("id").ilike("username", username).maybeSingle(),
+        supabaseAdmin.from("profiles").select("id").eq("email", email).maybeSingle(),
+      ]);
+      const precheckMs = Date.now() - precheckStartedAt;
+
+      const { data: existingUsername, error: usernameLookupError } = usernameLookup;
       if (usernameLookupError) {
         logAuthError("register_username_lookup", usernameLookupError);
         return { ok: false, code: "server", message: "Не удалось проверить логин" };
@@ -196,11 +202,7 @@ export const registerAccount = createServerFn({ method: "POST" })
       if (existingUsername)
         return { ok: false, code: "username_taken", message: "Этот логин уже занят" };
 
-      const { data: existingEmail, error: emailLookupError } = await supabaseAdmin
-        .from("profiles")
-        .select("id")
-        .eq("email", email)
-        .maybeSingle();
+      const { data: existingEmail, error: emailLookupError } = emailLookup;
       if (emailLookupError) {
         logAuthError("register_email_lookup", emailLookupError);
         return { ok: false, code: "server", message: "Не удалось проверить Email" };
@@ -213,12 +215,14 @@ export const registerAccount = createServerFn({ method: "POST" })
         };
       }
 
+      const createUserStartedAt = Date.now();
       const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
         user_metadata: { username, full_name: name },
       });
+      const createUserMs = Date.now() - createUserStartedAt;
 
       if (createError || !created.user) {
         if (createError) logAuthError("register_create_user", createError);
@@ -253,52 +257,17 @@ export const registerAccount = createServerFn({ method: "POST" })
         };
       }
 
-      const now = new Date().toISOString();
-      const { data: profile, error: profileError } = await supabaseAdmin
-        .from("profiles")
-        .upsert(
-          {
-            id: created.user.id,
-            email,
-            username,
-            full_name: name,
-            role: "student",
-            account_status: "pending",
-            is_active: true,
-            last_seen_at: now,
-          },
-          { onConflict: "id" },
-        )
-        .select("id, role, account_status, is_active")
-        .single();
-
-      if (
-        profileError ||
-        !profile ||
-        profile.id !== created.user.id ||
-        profile.role !== "student" ||
-        profile.account_status !== "pending" ||
-        profile.is_active !== true
-      ) {
-        logAuthError("register_profile", profileError ?? new Error("Unexpected profile defaults"));
-        const cleaned = await cleanupNewUser(created.user.id);
-        const duplicate = profileError?.code === "23505";
-        if (duplicate)
-          return { ok: false, code: "username_taken", message: "Этот логин уже занят" };
-        return {
-          ok: false,
-          code: "server",
-          message: cleaned
-            ? "Не удалось создать профиль. Попробуйте ещё раз."
-            : "Регистрация не завершена. Обратитесь в поддержку HunMaster.",
-        };
-      }
+      // `on_auth_user_created` runs in the same database transaction as Auth creation.
+      // A successful createUser therefore already guarantees the student profile and role rows;
+      // repeating an upsert here only added a full network roundtrip and duplicate write.
 
       const auth = createServerAuthClient();
+      const sessionStartedAt = Date.now();
       const { data: session, error: signInError } = await auth.auth.signInWithPassword({
         email,
         password,
       });
+      const sessionMs = Date.now() - sessionStartedAt;
 
       if (signInError || !session.session) {
         logAuthError("register_session", signInError ?? new Error("Session was not returned"));
@@ -311,6 +280,13 @@ export const registerAccount = createServerFn({ method: "POST" })
             : "Аккаунт создан, но сессия не открылась. Попробуйте войти.",
         };
       }
+
+      console.info("[Auth] Registration timing", {
+        precheckMs,
+        createUserMs,
+        sessionMs,
+        totalMs: Date.now() - startedAt,
+      });
 
       return {
         ok: true,
