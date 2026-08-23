@@ -32,8 +32,10 @@ function RegisterPage() {
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm({ ...form, [k]: e.target.value });
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setForm((current) => ({ ...current, [k]: value }));
+  };
 
   return (
     <div className="aurora grain grid min-h-screen place-items-center px-4 py-32">
