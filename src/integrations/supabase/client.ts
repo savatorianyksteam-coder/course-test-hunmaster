@@ -2,6 +2,8 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 import {
+  assertHunMasterSupabaseUrl,
+  assertSupabasePublishableKey,
   HUNMASTER_SUPABASE_PUBLISHABLE_KEY,
   HUNMASTER_SUPABASE_URL,
   readProcessEnv,
@@ -37,19 +39,23 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL =
+  const SUPABASE_URL = assertHunMasterSupabaseUrl(
     import.meta.env["VITE_SUPABASE_URL"] ||
-    readProcessEnv("SUPABASE_URL") ||
-    readProcessEnv("VITE_SUPABASE_URL") ||
-    HUNMASTER_SUPABASE_URL;
-  const SUPABASE_ANON_KEY =
+      readProcessEnv("SUPABASE_URL") ||
+      readProcessEnv("VITE_SUPABASE_URL") ||
+      HUNMASTER_SUPABASE_URL,
+    "browser client",
+  );
+  const SUPABASE_ANON_KEY = assertSupabasePublishableKey(
     import.meta.env["VITE_SUPABASE_ANON_KEY"] ||
-    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
-    readProcessEnv("VITE_SUPABASE_ANON_KEY") ||
-    readProcessEnv("VITE_SUPABASE_PUBLISHABLE_KEY") ||
-    readProcessEnv("SUPABASE_ANON_KEY") ||
-    readProcessEnv("SUPABASE_PUBLISHABLE_KEY") ||
-    HUNMASTER_SUPABASE_PUBLISHABLE_KEY;
+      import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+      readProcessEnv("VITE_SUPABASE_ANON_KEY") ||
+      readProcessEnv("VITE_SUPABASE_PUBLISHABLE_KEY") ||
+      readProcessEnv("SUPABASE_ANON_KEY") ||
+      readProcessEnv("SUPABASE_PUBLISHABLE_KEY") ||
+      HUNMASTER_SUPABASE_PUBLISHABLE_KEY,
+    "browser client",
+  );
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     const missing = [

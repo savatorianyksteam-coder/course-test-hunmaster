@@ -4,7 +4,7 @@
 // For user-authenticated queries (with RLS), use the auth middleware instead.
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
-import { HUNMASTER_SUPABASE_URL } from "./public-config";
+import { assertHunMasterSupabaseUrl, HUNMASTER_SUPABASE_URL } from "./public-config";
 
 function isNewSupabaseApiKey(value: string): boolean {
   return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
@@ -33,20 +33,44 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
   };
 }
 
-function createSupabaseAdminClient() {
-  const SUPABASE_URL =
-    process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"] || HUNMASTER_SUPABASE_URL;
-  const SUPABASE_SERVICE_ROLE_KEY = process.env["SUPABASE_SERVICE_ROLE_KEY"];
+function assertServiceRoleKey(value: string) {
+  if (value.startsWith("sb_secret_")) return value;
+  if (value.startsWith("sb_")) throw new Error("Invalid Supabase service-role configuration");
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  try {
+    const encoded = value.split(".")[1];
+    if (!encoded) throw new Error("Invalid Supabase service-role configuration");
+    const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    const payload = JSON.parse(atob(padded)) as { role?: unknown };
+    if (payload.role !== "service_role") {
+      throw new Error("Invalid Supabase service-role configuration");
+    }
+  } catch {
+    throw new Error("Invalid Supabase service-role configuration");
+  }
+
+  return value;
+}
+
+function createSupabaseAdminClient() {
+  const SUPABASE_URL = assertHunMasterSupabaseUrl(
+    process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"] || HUNMASTER_SUPABASE_URL,
+    "server admin client",
+  );
+  const configuredServiceRoleKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
+
+  if (!SUPABASE_URL || !configuredServiceRoleKey) {
     const missing = [
       ...(!SUPABASE_URL ? ["SUPABASE_URL"] : []),
-      ...(!SUPABASE_SERVICE_ROLE_KEY ? ["SUPABASE_SERVICE_ROLE_KEY"] : []),
+      ...(!configuredServiceRoleKey ? ["SUPABASE_SERVICE_ROLE_KEY"] : []),
     ];
     const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Connect Supabase in Lovable Cloud.`;
     console.error(`[Supabase] ${message}`);
     throw new Error(message);
   }
+
+  const SUPABASE_SERVICE_ROLE_KEY = assertServiceRoleKey(configuredServiceRoleKey);
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     global: {

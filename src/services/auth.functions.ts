@@ -12,7 +12,14 @@ export type AuthResult =
   | { ok: true; access_token: string; refresh_token: string }
   | {
       ok: false;
-      code: "invalid_credentials" | "username_taken" | "email_taken" | "validation" | "server";
+      code:
+        | "invalid_credentials"
+        | "username_taken"
+        | "email_taken"
+        | "validation"
+        | "server_configuration"
+        | "session_creation"
+        | "server";
       message: string;
     };
 
@@ -51,12 +58,72 @@ function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-async function resolveLoginEmail(identifier: string): Promise<string | null> {
+type ErrorLike = { code?: unknown; message?: unknown; status?: unknown; name?: unknown };
+
+function errorLike(error: unknown): ErrorLike {
+  return error != null && typeof error === "object" ? (error as ErrorLike) : {};
+}
+
+function logAuthError(operation: string, error: unknown) {
+  const detail = errorLike(error);
+  console.error("[Auth] Operation failed", {
+    operation,
+    name: typeof detail.name === "string" ? detail.name : undefined,
+    code: typeof detail.code === "string" ? detail.code : undefined,
+    status: typeof detail.status === "number" ? detail.status : undefined,
+    message:
+      typeof detail.message === "string"
+        ? detail.message
+        : error instanceof Error
+          ? error.message
+          : String(error),
+  });
+}
+
+function isServerConfigurationError(error: unknown) {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof errorLike(error).message === "string"
+        ? String(errorLike(error).message)
+        : "";
+  return (
+    message.includes("Missing Supabase") ||
+    message.includes("Invalid Supabase URL") ||
+    message.includes("Unexpected Supabase project") ||
+    message.includes("Invalid Supabase service-role") ||
+    message.includes("Secret Supabase key") ||
+    message.includes("Service-role Supabase key")
+  );
+}
+
+function unexpectedServerFailure(operation: string, error: unknown): AuthResult {
+  logAuthError(operation, error);
+  if (isServerConfigurationError(error)) {
+    return {
+      ok: false,
+      code: "server_configuration",
+      message: "Сервис авторизации временно не настроен. Сообщите команде HunMaster.",
+    };
+  }
+  return {
+    ok: false,
+    code: "server",
+    message: "Сервис авторизации временно недоступен. Попробуйте ещё раз.",
+  };
+}
+
+type LoginEmailResolution =
+  | { ok: true; email: string }
+  | { ok: false; reason: "invalid_identifier" }
+  | { ok: false; reason: "lookup_failed"; error: unknown };
+
+async function resolveLoginEmail(identifier: string): Promise<LoginEmailResolution> {
   const normalized = identifier.trim().toLowerCase();
-  if (isEmail(normalized)) return normalized;
+  if (isEmail(normalized)) return { ok: true, email: normalized };
 
   const parsedUsername = usernameSchema.safeParse(normalized);
-  if (!parsedUsername.success) return null;
+  if (!parsedUsername.success) return { ok: false, reason: "invalid_identifier" };
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
@@ -65,17 +132,38 @@ async function resolveLoginEmail(identifier: string): Promise<string | null> {
     .ilike("username", parsedUsername.data)
     .maybeSingle();
 
-  if (error || !data?.email) return null;
-  return data.email;
+  if (error) return { ok: false, reason: "lookup_failed", error };
+  if (!data?.email) return { ok: false, reason: "invalid_identifier" };
+  return { ok: true, email: data.email };
 }
 
-function isAlreadyRegistered(message?: string) {
-  const normalized = message?.toLowerCase() ?? "";
+function isAlreadyRegistered(error: unknown) {
+  const detail = errorLike(error);
+  const normalized = typeof detail.message === "string" ? detail.message.toLowerCase() : "";
+  const code = typeof detail.code === "string" ? detail.code.toLowerCase() : "";
   return (
+    code.includes("email_exists") ||
+    code.includes("user_already_exists") ||
     normalized.includes("already") ||
     normalized.includes("registered") ||
     normalized.includes("exists")
   );
+}
+
+function isWeakPassword(error: unknown) {
+  const detail = errorLike(error);
+  const code = typeof detail.code === "string" ? detail.code.toLowerCase() : "";
+  const message = typeof detail.message === "string" ? detail.message.toLowerCase() : "";
+  return (
+    code.includes("weak_password") || (message.includes("password") && message.includes("weak"))
+  );
+}
+
+async function cleanupNewUser(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+  if (error) logAuthError("registration_cleanup", error);
+  return !error;
 }
 
 /** Public: creates a Supabase Auth email/password user and a shared Admin-compatible student profile. */
@@ -91,91 +179,147 @@ export const registerAccount = createServerFn({ method: "POST" })
       };
     }
 
-    const { email, name, password, username } = parsed.data;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { createServerAuthClient } = await import("./internal-auth.server");
+    try {
+      const { email, name, password, username } = parsed.data;
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { createServerAuthClient } = await import("./internal-auth.server");
 
-    const { data: existingUsername, error: usernameLookupError } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .ilike("username", username)
-      .maybeSingle();
-    if (usernameLookupError)
-      return { ok: false, code: "server", message: "Не удалось проверить логин" };
-    if (existingUsername)
-      return { ok: false, code: "username_taken", message: "Этот логин уже занят" };
+      const { data: existingUsername, error: usernameLookupError } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .ilike("username", username)
+        .maybeSingle();
+      if (usernameLookupError) {
+        logAuthError("register_username_lookup", usernameLookupError);
+        return { ok: false, code: "server", message: "Не удалось проверить логин" };
+      }
+      if (existingUsername)
+        return { ok: false, code: "username_taken", message: "Этот логин уже занят" };
 
-    const { data: existingEmail, error: emailLookupError } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .eq("email", email)
-      .maybeSingle();
-    if (emailLookupError)
-      return { ok: false, code: "server", message: "Не удалось проверить Email" };
-    if (existingEmail) {
-      return {
-        ok: false,
-        code: "email_taken",
-        message: "Пользователь с таким Email уже существует",
-      };
-    }
-
-    const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { username, full_name: name },
-    });
-
-    if (createError || !created.user) {
-      if (isAlreadyRegistered(createError?.message)) {
+      const { data: existingEmail, error: emailLookupError } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+      if (emailLookupError) {
+        logAuthError("register_email_lookup", emailLookupError);
+        return { ok: false, code: "server", message: "Не удалось проверить Email" };
+      }
+      if (existingEmail) {
         return {
           ok: false,
           code: "email_taken",
           message: "Пользователь с таким Email уже существует",
         };
       }
-      return { ok: false, code: "server", message: "Не удалось создать аккаунт" };
-    }
 
-    const now = new Date().toISOString();
-    const { error: profileError } = await supabaseAdmin.from("profiles").upsert(
-      {
-        id: created.user.id,
+      const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
-        username,
-        full_name: name,
-        role: "student",
-        account_status: "pending",
-        is_active: true,
-        last_seen_at: now,
-      },
-      { onConflict: "id" },
-    );
+        password,
+        email_confirm: true,
+        user_metadata: { username, full_name: name },
+      });
 
-    if (profileError) {
-      await supabaseAdmin.auth.admin.deleteUser(created.user.id);
-      const taken = profileError.code === "23505";
-      return taken
-        ? { ok: false, code: "username_taken", message: "Этот логин уже занят" }
-        : { ok: false, code: "server", message: "Не удалось создать профиль" };
+      if (createError || !created.user) {
+        if (createError) logAuthError("register_create_user", createError);
+        if (isAlreadyRegistered(createError)) {
+          return {
+            ok: false,
+            code: "email_taken",
+            message: "Пользователь с таким Email уже существует",
+          };
+        }
+        if (isWeakPassword(createError)) {
+          return {
+            ok: false,
+            code: "validation",
+            message: "Пароль не соответствует требованиям безопасности",
+          };
+        }
+
+        // The database trigger enforces username uniqueness during Auth creation too.
+        const { data: conflictingUsername } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .ilike("username", username)
+          .maybeSingle();
+        if (conflictingUsername) {
+          return { ok: false, code: "username_taken", message: "Этот логин уже занят" };
+        }
+        return {
+          ok: false,
+          code: "server",
+          message: "Не удалось создать аккаунт. Попробуйте ещё раз.",
+        };
+      }
+
+      const now = new Date().toISOString();
+      const { data: profile, error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .upsert(
+          {
+            id: created.user.id,
+            email,
+            username,
+            full_name: name,
+            role: "student",
+            account_status: "pending",
+            is_active: true,
+            last_seen_at: now,
+          },
+          { onConflict: "id" },
+        )
+        .select("id, role, account_status, is_active")
+        .single();
+
+      if (
+        profileError ||
+        !profile ||
+        profile.id !== created.user.id ||
+        profile.role !== "student" ||
+        profile.account_status !== "pending" ||
+        profile.is_active !== true
+      ) {
+        logAuthError("register_profile", profileError ?? new Error("Unexpected profile defaults"));
+        const cleaned = await cleanupNewUser(created.user.id);
+        const duplicate = profileError?.code === "23505";
+        if (duplicate)
+          return { ok: false, code: "username_taken", message: "Этот логин уже занят" };
+        return {
+          ok: false,
+          code: "server",
+          message: cleaned
+            ? "Не удалось создать профиль. Попробуйте ещё раз."
+            : "Регистрация не завершена. Обратитесь в поддержку HunMaster.",
+        };
+      }
+
+      const auth = createServerAuthClient();
+      const { data: session, error: signInError } = await auth.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError || !session.session) {
+        logAuthError("register_session", signInError ?? new Error("Session was not returned"));
+        const cleaned = await cleanupNewUser(created.user.id);
+        return {
+          ok: false,
+          code: "session_creation",
+          message: cleaned
+            ? "Не удалось завершить регистрацию. Попробуйте ещё раз."
+            : "Аккаунт создан, но сессия не открылась. Попробуйте войти.",
+        };
+      }
+
+      return {
+        ok: true,
+        access_token: session.session.access_token,
+        refresh_token: session.session.refresh_token,
+      };
+    } catch (error) {
+      return unexpectedServerFailure("register_unexpected", error);
     }
-
-    const auth = createServerAuthClient();
-    const { data: session, error: signInError } = await auth.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (signInError || !session.session) {
-      return { ok: false, code: "server", message: "Аккаунт создан, но войти не удалось" };
-    }
-
-    return {
-      ok: true,
-      access_token: session.session.access_token,
-      refresh_token: session.session.refresh_token,
-    };
   });
 
 /** Public: signs in with Email or username. Username lookup stays server-side and never exposes private email. */
@@ -185,28 +329,44 @@ export const loginWithIdentifier = createServerFn({ method: "POST" })
     const parsed = credentialsSchema.safeParse(data);
     if (!parsed.success) return invalidCredentials;
 
-    const email = await resolveLoginEmail(parsed.data.identifier);
-    if (!email) return invalidCredentials;
+    try {
+      const resolution = await resolveLoginEmail(parsed.data.identifier);
+      if (!resolution.ok) {
+        if (resolution.reason === "lookup_failed") {
+          logAuthError("login_username_lookup", resolution.error);
+          return {
+            ok: false,
+            code: "server",
+            message: "Не удалось проверить логин. Попробуйте ещё раз.",
+          };
+        }
+        return invalidCredentials;
+      }
 
-    const { createServerAuthClient } = await import("./internal-auth.server");
-    const auth = createServerAuthClient();
-    const { data: session, error } = await auth.auth.signInWithPassword({
-      email,
-      password: parsed.data.password,
-    });
-    if (error || !session.session) return invalidCredentials;
+      const { createServerAuthClient } = await import("./internal-auth.server");
+      const auth = createServerAuthClient();
+      const { data: session, error } = await auth.auth.signInWithPassword({
+        email: resolution.email,
+        password: parsed.data.password,
+      });
+      if (error || !session.session) return invalidCredentials;
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin
-      .from("profiles")
-      .update({ last_seen_at: new Date().toISOString() })
-      .eq("id", session.user.id);
+      // The password-grant client is authenticated as this user, so RLS can safely
+      // update its own activity without making email login depend on service-role.
+      const { error: lastSeenError } = await auth
+        .from("profiles")
+        .update({ last_seen_at: new Date().toISOString() })
+        .eq("id", session.user.id);
+      if (lastSeenError) logAuthError("login_last_seen", lastSeenError);
 
-    return {
-      ok: true,
-      access_token: session.session.access_token,
-      refresh_token: session.session.refresh_token,
-    };
+      return {
+        ok: true,
+        access_token: session.session.access_token,
+        refresh_token: session.session.refresh_token,
+      };
+    } catch (error) {
+      return unexpectedServerFailure("login_unexpected", error);
+    }
   });
 
 export const loginWithUsername = loginWithIdentifier;
@@ -215,10 +375,13 @@ export const loginWithUsername = loginWithIdentifier;
 export const touchLastSeen = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin
+    const { error } = await context.supabase
       .from("profiles")
       .update({ last_seen_at: new Date().toISOString() })
       .eq("id", context.userId);
+    if (error) {
+      logAuthError("touch_last_seen", error);
+      return { ok: false as const };
+    }
     return { ok: true };
   });

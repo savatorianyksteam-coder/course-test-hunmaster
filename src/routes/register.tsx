@@ -64,17 +64,17 @@ function RegisterPage() {
                 toast.error(res.message);
                 return;
               }
-              const { error } = await supabase.auth.setSession({
+              const { data: sessionData, error } = await supabase.auth.setSession({
                 access_token: res.access_token,
                 refresh_token: res.refresh_token,
               });
-              if (error) {
-                toast.success("Аккаунт создан — войдите с новым логином");
-                navigate({ to: "/login" });
+              if (error || !sessionData.session) {
+                toast.error("Аккаунт создан, но сессия не открылась. Войдите с новым логином.");
+                await navigate({ to: "/login", replace: true });
                 return;
               }
               toast.success("Аккаунт создан");
-              navigate({ to: "/" });
+              await navigate({ to: "/", replace: true });
             } catch {
               toast.error("Не удалось создать аккаунт. Попробуйте ещё раз.");
             } finally {

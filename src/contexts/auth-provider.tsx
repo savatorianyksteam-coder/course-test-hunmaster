@@ -95,7 +95,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     await queryClient.cancelQueries();
     queryClient.clear();
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("[Auth] Remote sign-out failed; clearing the local session", {
+        name: error.name,
+        message: error.message,
+        status: error.status,
+      });
+      await supabase.auth.signOut({ scope: "local" });
+    }
+    setSession(null);
+    setReady(true);
   }, [queryClient]);
 
   const profile = profileQuery.data ?? null;

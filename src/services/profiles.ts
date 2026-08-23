@@ -43,5 +43,5 @@ export async function updateMyName(userId: string, fullName: string) {
 export function effectiveAccessStatus(profile: Profile | null): AccessStatus {
   if (!profile) return "pending";
   if (!profile.is_active || profile.account_status === "blocked") return "blocked";
-  return "active";
+  return profile.account_status;
 }

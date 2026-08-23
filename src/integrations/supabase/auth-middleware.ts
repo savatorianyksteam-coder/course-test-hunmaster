@@ -3,7 +3,12 @@ import { createMiddleware } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
-import { HUNMASTER_SUPABASE_PUBLISHABLE_KEY, HUNMASTER_SUPABASE_URL } from "./public-config";
+import {
+  assertHunMasterSupabaseUrl,
+  assertSupabasePublishableKey,
+  HUNMASTER_SUPABASE_PUBLISHABLE_KEY,
+  HUNMASTER_SUPABASE_URL,
+} from "./public-config";
 
 function isNewSupabasePublishableKey(value: string): boolean {
   return value.startsWith("sb_publishable_");
@@ -34,14 +39,18 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 
 export const requireSupabaseAuth = createMiddleware({ type: "function" }).server(
   async ({ next }) => {
-    const SUPABASE_URL =
-      process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"] || HUNMASTER_SUPABASE_URL;
-    const SUPABASE_ANON_KEY =
+    const SUPABASE_URL = assertHunMasterSupabaseUrl(
+      process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"] || HUNMASTER_SUPABASE_URL,
+      "auth middleware",
+    );
+    const SUPABASE_ANON_KEY = assertSupabasePublishableKey(
       process.env["SUPABASE_ANON_KEY"] ||
-      process.env["VITE_SUPABASE_ANON_KEY"] ||
-      process.env["SUPABASE_PUBLISHABLE_KEY"] ||
-      process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
-      HUNMASTER_SUPABASE_PUBLISHABLE_KEY;
+        process.env["VITE_SUPABASE_ANON_KEY"] ||
+        process.env["SUPABASE_PUBLISHABLE_KEY"] ||
+        process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+        HUNMASTER_SUPABASE_PUBLISHABLE_KEY,
+      "auth middleware",
+    );
 
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
       const missing = [

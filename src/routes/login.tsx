@@ -51,16 +51,16 @@ function LoginPage() {
                 toast.error(res.message);
                 return;
               }
-              const { error } = await supabase.auth.setSession({
+              const { data: sessionData, error } = await supabase.auth.setSession({
                 access_token: res.access_token,
                 refresh_token: res.refresh_token,
               });
-              if (error) {
+              if (error || !sessionData.session) {
                 toast.error("Не удалось открыть сессию");
                 return;
               }
               toast.success("С возвращением!");
-              navigate({ to: "/" });
+              await navigate({ to: "/", replace: true });
             } catch {
               toast.error("Не удалось войти. Попробуйте ещё раз.");
             } finally {
